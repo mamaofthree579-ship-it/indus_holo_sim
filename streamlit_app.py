@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from simulator.symbol import Symbol
 from simulator.simulator import HoloSimulator
 from simulator.grid import create_grid
+from simulator.indus_signs import INDUS_SIGNS, NB_LIST
 
 
 # --------------------------------------------------------------------------------------
@@ -35,31 +36,50 @@ if "symbols" not in st.session_state:
 st.sidebar.header("➕ Add a Symbol")
 
 with st.sidebar.form("add_symbol"):
-    name = st.text_input("Symbol Name", "symbol")
+    
+    st.write("### Choose Indus Sign")
+
+    nb_code = st.selectbox("NB Sign ID", NB_LIST)
+    sign_info = INDUS_SIGNS[nb_code]
+
+    name = st.text_input("Custom Name (optional)", sign_info["name"])
+
     x = st.slider("X Position", 0.0, 1.0, 0.5)
     y = st.slider("Y Position", 0.0, 1.0, 0.5)
 
-    base_freq = st.number_input("Base Frequency (Hz)", 1.0, 200.0, 20.0)
-    amplitude = st.number_input("Amplitude", 0.1, 5.0, 1.0)
-    sigma = st.number_input("Spatial Sigma", 0.01, 0.2, 0.06)
+    base_freq = st.number_input(
+        "Base Frequency (Hz)",
+        1.0, 200.0,
+        sign_info["default_freq"]
+    )
 
-    st.write("---")
+    amplitude = st.number_input("Amplitude", 0.1, 5.0, 1.0)
+
+    sigma = st.number_input(
+        "Spatial Sigma",
+        0.01, 0.2,
+        sign_info["sigma"]
+    )
+
     st.write("### Harmonics")
-    num_harm = st.number_input("Number of Harmonics", 1, 6, 1)
+    
+    default_harm = sign_info["harmonics"]
+    harmonic_count = len(default_harm)
 
     harmonics = []
-    for i in range(num_harm):
+    for i in range(harmonic_count):
+        mult, rel_amp, phase = default_harm[i]
         st.write(f"**Harmonic {i+1}**")
-        mult = st.number_input(f"Multiplier {i+1}", 1.0, 10.0, float(i+1))
-        rel_amp = st.number_input(f"Relative Amp {i+1}", 0.0, 2.0, 1.0)
-        phase = st.number_input(f"Phase Offset {i+1}", 0.0, np.pi, 0.0)
+        mult = st.number_input(f"Multiplier {i+1}", 1.0, 10.0, mult)
+        rel_amp = st.number_input(f"Relative Amp {i+1}", 0.0, 2.0, rel_amp)
+        phase = st.number_input(f"Phase Offset {i+1}", 0.0, np.pi, phase)
         harmonics.append((mult, rel_amp, phase))
 
-    submitted = st.form_submit_button("Add Symbol")
+    submitted = st.form_submit_button("Add Sign")
 
 if submitted:
     s = Symbol(
-        name=name,
+        name=name if name else sign_info["name"],
         x=x,
         y=y,
         base_freq=base_freq,
@@ -67,8 +87,9 @@ if submitted:
         sigma=sigma,
         harmonics=harmonics
     )
+
     st.session_state.symbols.append(s)
-    st.success(f"Added symbol '{name}'.")
+    st.success(f"Added Indus Sign {nb_code} — {sign_info['name']}.")
 
 
 # --------------------------------------------------------------------------------------

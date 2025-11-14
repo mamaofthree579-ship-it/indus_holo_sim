@@ -95,6 +95,22 @@ if submitted:
 # --------------------------------------------------------------------------------------
 # Sidebar: Symbol list + clear
 # --------------------------------------------------------------------------------------
+# in sidebar, allow modality selection:
+mode = st.sidebar.selectbox("Glyph Rendering Mode", ["neutral","acoustic","light","matrix"], index=1)
+
+# ensure glyph exists when user browses
+selected_nb = st.sidebar.selectbox("NB Sign ID", NB_LIST)
+
+# generate on demand (non-destructive)
+glyph_path = INDUS_SIGNS[selected_nb].get("image_url")
+if not glyph_path:
+    glyph_path = generate_glyph(selected_nb, mode=mode)
+    INDUS_SIGNS[selected_nb]["image_url"] = glyph_path
+
+# display thumbnail
+if glyph_path and os.path.exists(glyph_path):
+    im = Image.open(glyph_path)
+    st.sidebar.image(im, caption=f"{selected_nb} — {INDUS_SIGNS[selected_nb]['name']}", use_column_width=True)
 st.sidebar.write("---")
 st.sidebar.header("📜 Symbols")
 

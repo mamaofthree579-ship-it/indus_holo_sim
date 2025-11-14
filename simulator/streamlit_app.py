@@ -2,10 +2,13 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-from simulator import Symbol, HoloSimulator, create_grid
+from simulator.symbol import Symbol
+from simulator.simulator import HoloSimulator
+from simulator.grid import create_grid
+
 
 # --------------------------------------------------------------------------------------
-# Streamlit Page Configuration
+# Page configuration
 # --------------------------------------------------------------------------------------
 st.set_page_config(
     page_title="Indus Holographic-Frequency Simulator",
@@ -13,79 +16,80 @@ st.set_page_config(
 )
 
 st.title("🌀 Indus Script Holographic–Frequency Simulator")
-st.write("A research tool for exploring wave-based interference patterns encoded by symbolic nodes.")
+st.write("Explore wave-based holographic interference patterns encoded by symbolic nodes.")
+
 
 # --------------------------------------------------------------------------------------
-# Grid & Simulator Setup
+# Grid setup
 # --------------------------------------------------------------------------------------
 GRID_SIZE = 256
 XX, YY = create_grid(GRID_SIZE)
 
-# State storage
 if "symbols" not in st.session_state:
     st.session_state.symbols = []
 
+
 # --------------------------------------------------------------------------------------
-# Sidebar – Symbol Controls
+# Sidebar: Add symbol
 # --------------------------------------------------------------------------------------
 st.sidebar.header("➕ Add a Symbol")
 
-with st.sidebar.form("new_symbol_form"):
-    name = st.text_input("Name", "symbol")
+with st.sidebar.form("add_symbol"):
+    name = st.text_input("Symbol Name", "symbol")
     x = st.slider("X Position", 0.0, 1.0, 0.5)
     y = st.slider("Y Position", 0.0, 1.0, 0.5)
 
     base_freq = st.number_input("Base Frequency (Hz)", 1.0, 200.0, 20.0)
     amplitude = st.number_input("Amplitude", 0.1, 5.0, 1.0)
-    sigma = st.number_input("Spatial Spread (sigma)", 0.01, 0.2, 0.06)
+    sigma = st.number_input("Spatial Sigma", 0.01, 0.2, 0.06)
 
-    # Harmonic parameters
     st.write("---")
     st.write("### Harmonics")
     num_harm = st.number_input("Number of Harmonics", 1, 6, 1)
 
-    harmonic_params = []
+    harmonics = []
     for i in range(num_harm):
         st.write(f"**Harmonic {i+1}**")
         mult = st.number_input(f"Multiplier {i+1}", 1.0, 10.0, float(i+1))
-        rel_amp = st.number_input(f"Relative Amplitude {i+1}", 0.0, 2.0, 1.0)
-        phase = st.number_input(f"Phase Offset {i+1}", 0.0, 3.14, 0.0)
-        harmonic_params.append((mult, rel_amp, phase))
+        rel_amp = st.number_input(f"Relative Amp {i+1}", 0.0, 2.0, 1.0)
+        phase = st.number_input(f"Phase Offset {i+1}", 0.0, np.pi, 0.0)
+        harmonics.append((mult, rel_amp, phase))
 
     submitted = st.form_submit_button("Add Symbol")
 
 if submitted:
-    new_symbol = Symbol(
+    s = Symbol(
         name=name,
         x=x,
         y=y,
         base_freq=base_freq,
         amplitude=amplitude,
         sigma=sigma,
-        harmonics=harmonic_params,
+        harmonics=harmonics
     )
-    st.session_state.symbols.append(new_symbol)
-    st.success(f"Added symbol '{name}' to the simulation.")
+    st.session_state.symbols.append(s)
+    st.success(f"Added symbol '{name}'.")
 
 
 # --------------------------------------------------------------------------------------
-# Symbol List & Clear Button
+# Sidebar: Symbol list + clear
 # --------------------------------------------------------------------------------------
 st.sidebar.write("---")
-st.sidebar.header("📜 Current Symbols")
+st.sidebar.header("📜 Symbols")
 
 if st.session_state.symbols:
     for s in st.session_state.symbols:
-        st.sidebar.write(f"• **{s.name}** — freq {s.base_freq} Hz")
+        st.sidebar.write(f"• **{s.name}** — {s.base_freq} Hz")
 else:
-    st.sidebar.write("No symbols yet.")
+    st.sidebar.write("No symbols added yet.")
 
 if st.sidebar.button("Clear All Symbols"):
     st.session_state.symbols = []
-    st.sidebar.success("All symbols cleared.")
+    st.sidebar.success("Cleared.")
+
 
 # --------------------------------------------------------------------------------------
-# Simulation Controls
+# Simulation settings
 # --------------------------------------------------------------------------------------
 st.sidebar.write("---")
 st.sidebar.header("⚙ Simulation Settings")
@@ -93,17 +97,17 @@ st.sidebar.header("⚙ Simulation Settings")
 time_samples = st.sidebar.slider("Time Samples", 10, 200, 60)
 t_max = st.sidebar.slider("Time Window (seconds)", 0.1, 5.0, 1.0)
 
-run_sim = st.sidebar.button("Run Simulation")
+run_button = st.sidebar.button("Run Simulation")
 
 
 # --------------------------------------------------------------------------------------
-# Run Simulation & Plot
+# Run simulation
 # --------------------------------------------------------------------------------------
-if run_sim:
+if run_button:
     if not st.session_state.symbols:
-        st.warning("Add at least one symbol before simulating.")
+        st.warning("Add at least one symbol first.")
     else:
-        sim = HoloSimulator(XX, YY, time_samples=time_samples, t_max=t_max)
+        sim = HoloSimulator(XX, YY, time_samples, t_max)
 
         for s in st.session_state.symbols:
             sim.add_symbol(s)
@@ -118,14 +122,14 @@ if run_sim:
         ax.set_ylabel("Y")
 
         for s in st.session_state.symbols:
-            ax.plot(s.x, s.y, "wo", markersize=5)
+            ax.plot(s.x, s.y, "wo")
             ax.text(s.x + 0.01, s.y + 0.01, s.name, color="white", fontsize=8)
 
         st.pyplot(fig)
 
 else:
-    st.info("Add symbols and click **Run Simulation** to generate the holographic pattern.")
+    st.info("Add symbols and click **Run Simulation** to generate holographic patterns.")
 
-# --------------------------------------------------------------------------------------
+
 st.write("---")
-st.caption("Indus Holographic-Frequency Research Environment – built with Streamlit.")
+st.caption("Indus Holographic-Frequency Research Simulator – built with Streamlit.")

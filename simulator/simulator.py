@@ -30,3 +30,12 @@ class HoloSimulator:
         intensity = np.mean(total**2, axis=0)
         intensity /= intensity.max() + 1e-12
         return intensity
+
+    def create_grid(size: int):
+    """
+    Create centered 2D coordinate grid of shape (size, size)
+    range = -1..1 in both axes
+    """
+        lin = np.linspace(-1.0, 1.0, size)
+        x, y = np.meshgrid(lin, lin)
+        return x, y

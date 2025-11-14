@@ -1,44 +1,18 @@
-import numpy as np
-from simulator.symbol import Symbol
+def compute_field(self, x, y, symbols):
+    field = np.zeros_like(x, dtype=np.complex128)
 
+    for sym in symbols:
+        dx = x - sym.x
+        dy = y - sym.y
+        r = np.sqrt(dx**2 + dy**2) + 1e-6
 
-# -----------------------------------------------------
-# Create coordinate grid
-# -----------------------------------------------------
-def create_grid(size: int):
-    """
-    Create centered 2D grid scaled -1..1
-    """
-    lin = np.linspace(-1.0, 1.0, size)
-    x, y = np.meshgrid(lin, lin)
-    return x, y
+        # Base wave
+        wave = sym.amplitude * np.exp(1j * sym.base_freq * r)
 
+        # Harmonics stored as (mult, rel_amp, phase)
+        for (mult, rel, ph) in sym.harmonics:
+            wave += sym.amplitude * rel * np.exp(1j * (sym.base_freq * mult * r + ph))
 
-# -----------------------------------------------------
-# Holographic Simulator
-# -----------------------------------------------------
-class HoloSimulator:
-    def __init__(self):
-        pass
+        field += wave
 
-    def compute_field(self, x, y, symbols):
-        """
-        Sum complex wavefields emitted by each symbol.
-        """
-        field = np.zeros_like(x, dtype=np.complex128)
-
-        for sym in symbols:
-            dx = x - sym.x
-            dy = y - sym.y
-            r = np.sqrt(dx**2 + dy**2) + 1e-6
-
-            # base wave
-            wave = np.exp(1j * sym.base_freq * r)
-
-            # harmonics
-            for h in sym.harmonics:
-                wave += np.exp(1j * sym.base_freq * h * r)
-
-            field += sym.strength * wave
-
-        return field
+    return field

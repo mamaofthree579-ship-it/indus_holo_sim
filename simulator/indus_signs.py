@@ -184,6 +184,18 @@ def attach_images_from_dir(img_dir):
                 break
     return attached
 
+from simulator.glyph_generator import generate_glyph
+
+def ensure_glyphs_for_registry(mode="neutral"):
+    """
+    For any INDUS_SIGNS entry missing image_url, generate a procedural glyph.
+    mode: 'neutral'|'acoustic'|'light'|'matrix'
+    """
+    for code, entry in INDUS_SIGNS.items():
+        if not entry.get("image_url"):
+            path = generate_glyph(code, mode=mode)
+            entry["image_url"] = path
+
 # If running directly, print a quick summary
 if __name__ == "__main__":
     print(f"INDUS_SIGNS loaded: {len(INDUS_SIGNS)} entries (NB{NB_MIN:03d}..NB{NB_MAX:03d})")

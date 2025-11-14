@@ -11,9 +11,9 @@ Usage:
     from simulator import Symbol, HoloSimulator, create_grid
 """
 
-from .symbol import Symbol
-from .simulator import HoloSimulator
-from .grid import create_grid
+from simulator.symbol import Symbol
+from simulator.simulator import HoloSimulator
+from simulator.grid import create_grid
 
 __all__ = [
     "Symbol",

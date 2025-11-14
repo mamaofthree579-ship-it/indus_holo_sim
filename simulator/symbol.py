@@ -1,59 +1,40 @@
 import numpy as np
-from math import pi
-
-# Wave propagation constants (abstract units)
-C_PROP = 1.2       # propagation speed
-ALPHA_ATTEN = 8.0  # attenuation coefficient
-
 
 class Symbol:
-    """
-    Represents a holographic-frequency symbol with:
-    - base frequency
-    - harmonic multipliers
-    - propagation delay
-    - distance-based attenuation
-    - Gaussian spatial spread (sigma)
-    """
+    def __init__(
+        self,
+        name: str,
+        base_freq: float = 440.0,
+        harmonics=None,
+        strength: float = 1.0,
+        image_path: str = None,
+        x: float = 0.0,
+        y: float = 0.0
+    ):
+        """
+        A symbol in the holographic simulation.
 
-    def __init__(self, name, x, y, base_freq, amplitude=1.0, harmonics=None, sigma=0.06):
+        Parameters
+        ----------
+        name : NB code or label
+        base_freq : float
+        harmonics : list of multipliers
+        strength : amplitude multiplier
+        image_path : for display in UI
+        x, y : placement in grid (centered coords, -1..1)
+        """
         self.name = name
-        self.x = x
-        self.y = y
         self.base_freq = base_freq
-        self.amplitude = amplitude
-        self.sigma = sigma
 
         if harmonics is None:
-            self.harmonics = [(1.0, 1.0, 0.0)]
-        else:
-            self.harmonics = harmonics
+            harmonics = []
+        self.harmonics = harmonics
 
-    def distance(self, XX, YY):
-        return np.sqrt((XX - self.x)**2 + (YY - self.y)**2)
+        self.strength = float(strength)
+        self.image_path = image_path
 
-    def envelope(self, dist):
-        return np.exp(-(dist**2) / (2 * self.sigma**2))
+        self.x = float(x)
+        self.y = float(y)
 
-    def attenuation(self, dist):
-        return 1.0 / (1.0 + ALPHA_ATTEN * dist**2)
-
-    def contribution(self, times, XX, YY):
-        dist = self.distance(XX, YY)
-        env = self.envelope(dist)
-        att = self.attenuation(dist)
-
-        field = np.zeros((len(times), XX.shape[0], XX.shape[1]), dtype=np.float32)
-
-        for mult, rel_amp, phase_offset in self.harmonics:
-            freq = self.base_freq * mult
-            phase_delay = 2 * pi * freq * (dist / C_PROP)
-
-            for i, t in enumerate(times):
-                field[i] += (
-                    self.amplitude * rel_amp *
-                    np.sin(2 * pi * freq * t + phase_offset - phase_delay) *
-                    env * att
-                )
-
-        return field
+    def __repr__(self):
+        return f"Symbol(name={self.name}, f={self.base_freq}, harm={self.harmonics}, strength={self.strength})"

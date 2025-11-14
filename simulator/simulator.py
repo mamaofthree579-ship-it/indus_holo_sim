@@ -1,7 +1,6 @@
 import numpy as np
 from simulator.symbol import Symbol
 
-
 class HoloSimulator:
     """
     Computes holographic interference fields by superposing contributions

@@ -70,9 +70,9 @@ with st.sidebar.form("add_symbol"):
     for i in range(harmonic_count):
         mult, rel_amp, phase = default_harm[i]
         st.write(f"**Harmonic {i+1}**")
-        mult = st.number_input(f"Multiplier {i+1}", 1.0, 10.0, mult)
-        rel_amp = st.number_input(f"Relative Amp {i+1}", 0.0, 2.0, rel_amp)
-        phase = st.number_input(f"Phase Offset {i+1}", 0.0, np.pi, phase)
+        mult = st.number_input(f"Multiplier {i+1}", float(1.0), float(10.0), float(mult))
+        rel_amp = st.number_input(f"Relative Amp {i+1}", float(0.0), float(2.0), float(rel_amp))
+        phase = st.number_input(f"Phase Offset {i+1}", float(0.0), float(np.pi), float(phase))
         harmonics.append((mult, rel_amp, phase))
 
     submitted = st.form_submit_button("Add Sign")

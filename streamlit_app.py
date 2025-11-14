@@ -1,175 +1,114 @@
 import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-
 from PIL import Image
+
+# Core simulator imports
 from simulator.symbol import Symbol
-from simulator.simulator import HoloSimulator
-from simulator.grid import create_grid
+from simulator.simulator import HoloSimulator, create_grid
 from simulator.indus_signs import INDUS_SIGNS, NB_LIST
-from simulator.indus_signs import INDUS_SIGNS, NB_LIST
+
+# NEW REQUIRED IMPORT
 from simulator.glyph_generator import generate_glyph
 
-# --------------------------------------------------------------------------------------
-# Page configuration
-# --------------------------------------------------------------------------------------
-st.set_page_config(
-    page_title="Indus Holographic-Frequency Simulator",
-    layout="wide"
+
+st.set_page_config(page_title="Indus Holographic Simulator", layout="wide")
+
+st.title("Indus Script — Holographic Frequency Simulator")
+
+
+# ---------------------------------------------------
+# Sidebar: Choose glyph rendering mode
+# ---------------------------------------------------
+mode = st.sidebar.selectbox(
+    "Glyph Rendering Mode",
+    ["neutral", "acoustic", "light", "matrix"],
+    index=1
 )
 
-st.title("🌀 Indus Script Holographic–Frequency Simulator")
-st.write("Explore wave-based holographic interference patterns encoded by symbolic nodes.")
+# ---------------------------------------------------
+# Sidebar: Choose NB Sign
+# ---------------------------------------------------
+selected_nb = st.sidebar.selectbox("NB Code", NB_LIST)
+
+entry = INDUS_SIGNS[selected_nb]
+
+glyph_path = entry.get("image_url")
+
+if not glyph_path:
+    glyph_path = generate_glyph(selected_nb, mode=mode)
+    entry["image_url"] = glyph_path
+
+if glyph_path:
+    try:
+        img = Image.open(glyph_path)
+        st.sidebar.image(img, caption=f"{selected_nb} — {entry['name']}", use_column_width=True)
+    except:
+        st.sidebar.write("(glyph image could not be loaded)")
 
 
-# --------------------------------------------------------------------------------------
-# Grid setup
-# --------------------------------------------------------------------------------------
-GRID_SIZE = 256
-XX, YY = create_grid(GRID_SIZE)
+# ---------------------------------------------------
+# Symbol parameters
+# ---------------------------------------------------
+freq = st.sidebar.number_input("Base Frequency", 10.0, 2000.0, 440.0)
+strength = st.sidebar.number_input("Strength", 0.1, 10.0, 1.0)
 
+# Harmonics list
+harmonics = []
+num_harm = st.sidebar.slider("Number of Harmonics", 1, 6, 3)
+
+st.sidebar.write("Harmonic multipliers:")
+
+for i in range(num_harm):
+    multiplier = st.sidebar.number_input(
+        f"Multiplier {i+1}",
+        min_value=1.0,
+        max_value=10.0,
+        value=float(i+1)
+    )
+    harmonics.append(multiplier)
+
+
+# ---------------------------------------------------
+# Add symbol to simulation
+# ---------------------------------------------------
 if "symbols" not in st.session_state:
     st.session_state.symbols = []
 
-
-# --------------------------------------------------------------------------------------
-# Sidebar: Add symbol
-# --------------------------------------------------------------------------------------
-st.sidebar.header("➕ Add a Symbol")
-
-with st.sidebar.form("add_symbol"):
-    
-    st.write("### Choose Indus Sign")
-
-    nb_code = st.selectbox("NB Sign ID", NB_LIST)
-    sign_info = INDUS_SIGNS[nb_code]
-
-    name = st.text_input("Custom Name (optional)", sign_info["name"])
-
-    x = st.slider("X Position", 0.0, 1.0, 0.5)
-    y = st.slider("Y Position", 0.0, 1.0, 0.5)
-
-    base_freq = st.number_input(
-        "Base Frequency (Hz)",
-        1.0, 200.0,
-        sign_info["default_freq"]
+if st.sidebar.button("Add Symbol"):
+    symbol = Symbol(
+        name=selected_nb,
+        base_freq=freq,
+        harmonics=harmonics,
+        strength=strength,
+        image_path=glyph_path
     )
-
-    amplitude = st.number_input("Amplitude", 0.1, 5.0, 1.0)
-
-    sigma = st.number_input(
-        "Spatial Sigma",
-        0.01, 0.2,
-        sign_info["sigma"]
-    )
-
-    st.write("### Harmonics")
-    
-    default_harm = sign_info["harmonics"]
-    harmonic_count = len(default_harm)
-
-    harmonics = []
-    for i in range(harmonic_count):
-        mult, rel_amp, phase = default_harm[i]
-        st.write(f"**Harmonic {i+1}**")
-        mult = st.number_input(f"Multiplier {i+1}", float(1.0), float(10.0), float(mult))
-        rel_amp = st.number_input(f"Relative Amp {i+1}", float(0.0), float(2.0), float(rel_amp))
-        phase = st.number_input(f"Phase Offset {i+1}", float(0.0), float(np.pi), float(phase))
-        harmonics.append((mult, rel_amp, phase))
-
-    submitted = st.form_submit_button("Add Sign")
-
-if submitted:
-    s = Symbol(
-        name=name if name else sign_info["name"],
-        x=x,
-        y=y,
-        base_freq=base_freq,
-        amplitude=amplitude,
-        sigma=sigma,
-        harmonics=harmonics
-    )
-
-    st.session_state.symbols.append(s)
-    st.success(f"Added Indus Sign {nb_code} — {sign_info['name']}.")
+    st.session_state.symbols.append(symbol)
 
 
-# --------------------------------------------------------------------------------------
-# Sidebar: Symbol list + clear
-# --------------------------------------------------------------------------------------
-# in sidebar, allow modality selection:
-mode = st.sidebar.selectbox("Glyph Rendering Mode", ["neutral","acoustic","light","matrix"], index=1)
+# ---------------------------------------------------
+# Run simulation
+# ---------------------------------------------------
+st.header("Simulation")
 
-# ensure glyph exists when user browses
-selected_nb = st.sidebar.selectbox("NB Sign ID", NB_LIST)
+grid_size = st.slider("Grid Size", 100, 400, 200)
+x, y = create_grid(grid_size)
 
-# generate on demand (non-destructive)
-glyph_path = INDUS_SIGNS[selected_nb].get("image_url")
-if not glyph_path:
-    glyph_path = generate_glyph(selected_nb, mode=mode)
-    INDUS_SIGNS[selected_nb]["image_url"] = glyph_path
-
-# display thumbnail
-if glyph_path and os.path.exists(glyph_path):
-    im = Image.open(glyph_path)
-    st.sidebar.image(im, caption=f"{selected_nb} — {INDUS_SIGNS[selected_nb]['name']}", use_column_width=True)
-st.sidebar.write("---")
-st.sidebar.header("📜 Symbols")
+sim = HoloSimulator()
 
 if st.session_state.symbols:
-    for s in st.session_state.symbols:
-        st.sidebar.write(f"• **{s.name}** — {s.base_freq} Hz")
-else:
-    st.sidebar.write("No symbols added yet.")
+    field = sim.compute_field(x, y, st.session_state.symbols)
 
-if st.sidebar.button("Clear All Symbols"):
-    st.session_state.symbols = []
-    st.sidebar.success("Cleared.")
+    st.subheader("Combined Field Amplitude")
 
+    # Use Streamlit's built-in image display
+    import numpy as np
+    import matplotlib.pyplot as plt
 
-# --------------------------------------------------------------------------------------
-# Simulation settings
-# --------------------------------------------------------------------------------------
-st.sidebar.write("---")
-st.sidebar.header("⚙ Simulation Settings")
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.imshow(np.abs(field), cmap="viridis")
+    ax.set_title("Holographic Interference")
+    ax.axis("off")
 
-time_samples = st.sidebar.slider("Time Samples", 10, 200, 60)
-t_max = st.sidebar.slider("Time Window (seconds)", 0.1, 5.0, 1.0)
-
-run_button = st.sidebar.button("Run Simulation")
-
-
-# --------------------------------------------------------------------------------------
-# Run simulation
-# --------------------------------------------------------------------------------------
-if run_button:
-    if not st.session_state.symbols:
-        st.warning("Add at least one symbol first.")
-    else:
-        sim = HoloSimulator(XX, YY, time_samples, t_max)
-
-        for s in st.session_state.symbols:
-            sim.add_symbol(s)
-
-        with st.spinner("Computing holographic interference…"):
-            intensity = sim.simulate()
-
-        fig, ax = plt.subplots(figsize=(7, 7))
-        ax.imshow(intensity, origin="lower", extent=(0, 1, 0, 1))
-        ax.set_title("Holographic Intensity Field")
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-
-        for s in st.session_state.symbols:
-            ax.plot(s.x, s.y, "wo")
-            ax.text(s.x + 0.01, s.y + 0.01, s.name, color="white", fontsize=8)
-
-        st.pyplot(fig)
+    st.pyplot(fig)
 
 else:
-    st.info("Add symbols and click **Run Simulation** to generate holographic patterns.")
-
-
-st.write("---")
-st.caption("Indus Holographic-Frequency Research Simulator – built with Streamlit.")
+    st.write("Add at least one symbol to run the simulation.")

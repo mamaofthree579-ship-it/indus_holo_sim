@@ -1,10 +1,11 @@
 import numpy as np
-from .symbol import Symbol
+from simulator.symbol import Symbol
+
 
 class HoloSimulator:
     """
-    Main holographic field simulator.
-    Computes time-domain fields, then returns time-averaged intensity.
+    Computes holographic interference fields by superposing contributions
+    from all Symbol nodes across time.
     """
 
     def __init__(self, XX, YY, time_samples=60, t_max=1.0):

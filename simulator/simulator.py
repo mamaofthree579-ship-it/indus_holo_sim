@@ -1,41 +1,44 @@
 import numpy as np
 from simulator.symbol import Symbol
 
+
+# -----------------------------------------------------
+# Create coordinate grid
+# -----------------------------------------------------
+def create_grid(size: int):
+    """
+    Create centered 2D grid scaled -1..1
+    """
+    lin = np.linspace(-1.0, 1.0, size)
+    x, y = np.meshgrid(lin, lin)
+    return x, y
+
+
+# -----------------------------------------------------
+# Holographic Simulator
+# -----------------------------------------------------
 class HoloSimulator:
-    """
-    Computes holographic interference fields by superposing contributions
-    from all Symbol nodes across time.
-    """
+    def __init__(self):
+        pass
 
-    def __init__(self, XX, YY, time_samples=60, t_max=1.0):
-        self.XX = XX
-        self.YY = YY
-        self.time_samples = time_samples
-        self.t_max = t_max
-        self.symbols = []
+    def compute_field(self, x, y, symbols):
+        """
+        Sum complex wavefields emitted by each symbol.
+        """
+        field = np.zeros_like(x, dtype=np.complex128)
 
-    def add_symbol(self, symbol):
-        self.symbols.append(symbol)
+        for sym in symbols:
+            dx = x - sym.x
+            dy = y - sym.y
+            r = np.sqrt(dx**2 + dy**2) + 1e-6
 
-    def clear(self):
-        self.symbols = []
+            # base wave
+            wave = np.exp(1j * sym.base_freq * r)
 
-    def simulate(self):
-        times = np.linspace(0, self.t_max, self.time_samples)
-        total = np.zeros((self.time_samples, self.XX.shape[0], self.XX.shape[1]), dtype=np.float32)
+            # harmonics
+            for h in sym.harmonics:
+                wave += np.exp(1j * sym.base_freq * h * r)
 
-        for s in self.symbols:
-            total += s.contribution(times, self.XX, self.YY)
+            field += sym.strength * wave
 
-        intensity = np.mean(total**2, axis=0)
-        intensity /= intensity.max() + 1e-12
-        return intensity
-
-    def create_grid(size: int):
-    """
-    Create centered 2D coordinate grid of shape (size, size)
-    range = -1..1 in both axes
-    """
-        lin = np.linspace(-1.0, 1.0, size)
-        x, y = np.meshgrid(lin, lin)
-        return x, y
+        return field

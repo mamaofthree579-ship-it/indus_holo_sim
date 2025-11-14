@@ -2,15 +2,15 @@
 
 class Symbol:
     """
-    Unified Symbol class – supports:
-      - name
-      - base_freq
-      - harmonics
-      - image_path  <-- REQUIRED BY STREAMLIT
-      - amplitude
-      - x, y
+    Final stable Symbol class for the Indus holographic simulator.
 
-    This version is guaranteed compatible with streamlit_app.py.
+    Supports:
+      - name
+      - base_freq (float)
+      - harmonics: list of (mult, rel_amp, phase)
+      - amplitude
+      - image_path
+      - x,y placement (float)
     """
 
     def __init__(
@@ -21,16 +21,19 @@ class Symbol:
         image_path: str = None,
         amplitude: float = 1.0,
         x: float = 0.5,
-        y: float = 0.5
+        y: float = 0.5,
     ):
         self.name = name
+
+        # Ensure all critical values are floats
         self.base_freq = float(base_freq)
-        self.image_path = image_path
         self.amplitude = float(amplitude)
         self.x = float(x)
         self.y = float(y)
 
-        # Normalize harmonics
+        self.image_path = image_path
+
+        # Normalize harmonics into tuples of floats
         if harmonics is None:
             self.harmonics = []
         else:
@@ -43,11 +46,13 @@ class Symbol:
                     rel = float(h[1]) if len(h) > 1 else 1.0
                     phase = float(h[2]) if len(h) > 2 else 0.0
                     processed.append((mult, rel, phase))
+                else:
+                    # fallback: ignore invalid harmonics
+                    continue
             self.harmonics = processed
 
     def __repr__(self):
         return (
-            f"Symbol(name={self.name}, base_freq={self.base_freq}, "
-            f"harmonics={self.harmonics}, image_path={self.image_path}, "
-            f"pos=({self.x}, {self.y}), amplitude={self.amplitude})"
+            f"Symbol(name={self.name}, freq={self.base_freq}, amp={self.amplitude}, "
+            f"harmonics={self.harmonics}, pos=({self.x},{self.y}))"
         )

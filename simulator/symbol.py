@@ -1,18 +1,19 @@
 import numpy as np
 from math import pi
 
-C_PROP = 1.2       # propagation speed (abstract units)
-ALPHA_ATTEN = 8.0  # attenuation constant
+# Wave propagation constants (abstract units)
+C_PROP = 1.2       # propagation speed
+ALPHA_ATTEN = 8.0  # attenuation coefficient
+
 
 class Symbol:
     """
-    Represents a holographic-frequency glyph node.
-    Includes:
+    Represents a holographic-frequency symbol with:
     - base frequency
     - harmonic multipliers
     - propagation delay
     - distance-based attenuation
-    - Gaussian spatial envelope
+    - Gaussian spatial spread (sigma)
     """
 
     def __init__(self, name, x, y, base_freq, amplitude=1.0, harmonics=None, sigma=0.06):
@@ -24,7 +25,7 @@ class Symbol:
         self.sigma = sigma
 
         if harmonics is None:
-            self.harmonics = [(1.0, 1.0, 0.0)]  # (multiplier, relative_amp, phase_offset)
+            self.harmonics = [(1.0, 1.0, 0.0)]
         else:
             self.harmonics = harmonics
 
@@ -35,7 +36,7 @@ class Symbol:
         return np.exp(-(dist**2) / (2 * self.sigma**2))
 
     def attenuation(self, dist):
-        return 1.0 / (1 + ALPHA_ATTEN * dist**2)
+        return 1.0 / (1.0 + ALPHA_ATTEN * dist**2)
 
     def contribution(self, times, XX, YY):
         dist = self.distance(XX, YY)
@@ -46,8 +47,6 @@ class Symbol:
 
         for mult, rel_amp, phase_offset in self.harmonics:
             freq = self.base_freq * mult
-
-            # phase shift from propagation delay
             phase_delay = 2 * pi * freq * (dist / C_PROP)
 
             for i, t in enumerate(times):

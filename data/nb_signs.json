@@ -1,206 +1,41 @@
 {
-  "NB001": {
-    "mahadevan_id": null,
-    "wells_id": null,
-    "fuls_id": null,
-    "structural_class": null,
-    "frequency_total": null,
-    "frequency_rank": null,
-    "positional_profile": null,
-    "regional_distribution": null,
-    "artifact_distribution": null,
-    "variants": [],
-    "name": null,
-    "interpretation_martin2025": null,
-    "glyph": {
-      "image_path": null,
-      "vector_path": null,
-      "procedural_params": {
-        "stroke": null,
-        "symmetry": null,
-        "density": null
-      }
-    },
-    "holography": {
-      "default_freq": 25.0,
-      "sigma": 0.06,
-      "harmonics": [[1, 1.0, 0.0]],
-      "class_profile": "basic"
-    },
-    "sources": {
-      "mahadevan": null,
-      "fuls": null,
-      "harappa_structure": null,
-      "martin": null
-    },
-    "confidence": {
-      "mahadevan_mapping": "unknown",
-      "structural_class": "unknown",
-      "interpretation": "none"
-    }
-  },
+  "NB001": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
 
-  "NB002": {
-    "mahadevan_id": null,
-    "wells_id": null,
-    "fuls_id": null,
-    "structural_class": null,
-    "frequency_total": null,
-    "frequency_rank": null,
-    "positional_profile": null,
-    "regional_distribution": null,
-    "artifact_distribution": null,
-    "variants": [],
-    "name": null,
-    "interpretation_martin2025": null,
-    "glyph": {
-      "image_path": null,
-      "vector_path": null,
-      "procedural_params": {
-        "stroke": null,
-        "symmetry": null,
-        "density": null
-      }
-    },
-    "holography": {
-      "default_freq": 25.0,
-      "sigma": 0.06,
-      "harmonics": [[1, 1.0, 0.0]],
-      "class_profile": "basic"
-    },
-    "sources": {
-      "mahadevan": null,
-      "fuls": null,
-      "harappa_structure": null,
-      "martin": null
-    },
-    "confidence": {
-      "mahadevan_mapping": "unknown",
-      "structural_class": "unknown",
-      "interpretation": "none"
-    }
-  },
+  "NB002": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
 
-  "NB003": {
-    "mahadevan_id": null,
-    "wells_id": null,
-    "fuls_id": null,
-    "structural_class": null,
-    "frequency_total": null,
-    "frequency_rank": null,
-    "positional_profile": null,
-    "regional_distribution": null,
-    "artifact_distribution": null,
-    "variants": [],
-    "name": null,
-    "interpretation_martin2025": null,
-    "glyph": {
-      "image_path": null,
-      "vector_path": null,
-      "procedural_params": {
-        "stroke": null,
-        "symmetry": null,
-        "density": null
-      }
-    },
-    "holography": {
-      "default_freq": 25.0,
-      "sigma": 0.06,
-      "harmonics": [[1, 1.0, 0.0]],
-      "class_profile": "basic"
-    },
-    "sources": {
-      "mahadevan": null,
-      "fuls": null,
-      "harappa_structure": null,
-      "martin": null
-    },
-    "confidence": {
-      "mahadevan_mapping": "unknown",
-      "structural_class": "unknown",
-      "interpretation": "none"
-    }
-  },
+  "NB003": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
 
-  "NB004": {
-    "mahadevan_id": null,
-    "wells_id": null,
-    "fuls_id": null,
-    "structural_class": null,
-    "frequency_total": null,
-    "frequency_rank": null,
-    "positional_profile": null,
-    "regional_distribution": null,
-    "artifact_distribution": null,
-    "variants": [],
-    "name": null,
-    "interpretation_martin2025": null,
-    "glyph": {
-      "image_path": null,
-      "vector_path": null,
-      "procedural_params": {
-        "stroke": null,
-        "symmetry": null,
-        "density": null
-      }
-    },
-    "holography": {
-      "default_freq": 25.0,
-      "sigma": 0.06,
-      "harmonics": [[1, 1.0, 0.0]],
-      "class_profile": "basic"
-    },
-    "sources": {
-      "mahadevan": null,
-      "fuls": null,
-      "harappa_structure": null,
-      "martin": null
-    },
-    "confidence": {
-      "mahadevan_mapping": "unknown",
-      "structural_class": "unknown",
-      "interpretation": "none"
-    }
-  },
+  "NB004": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
 
-  "NB005": {
-    "mahadevan_id": null,
-    "wells_id": null,
-    "fuls_id": null,
-    "structural_class": null,
-    "frequency_total": null,
-    "frequency_rank": null,
-    "positional_profile": null,
-    "regional_distribution": null,
-    "artifact_distribution": null,
-    "variants": [],
-    "name": null,
-    "interpretation_martin2025": null,
-    "glyph": {
-      "image_path": null,
-      "vector_path": null,
-      "procedural_params": {
-        "stroke": null,
-        "symmetry": null,
-        "density": null
-      }
-    },
-    "holography": {
-      "default_freq": 25.0,
-      "sigma": 0.06,
-      "harmonics": [[1, 1.0, 0.0]],
-      "class_profile": "basic"
-    },
-    "sources": {
-      "mahadevan": null,
-      "fuls": null,
-      "harappa_structure": null,
-      "martin": null
-    },
-    "confidence": {
-      "mahadevan_mapping": "unknown",
-      "structural_class": "unknown",
-      "interpretation": "none"
-    }
-  }
+  "NB005": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+  
+  "NB006": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB007": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB008": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB009": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB010": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB011": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB012": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB013": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB014": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB015": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB016": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB017": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB018": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB019": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}},
+
+  "NB020": {"mahadevan_id":null,"wells_id":null,"fuls_id":null,"structural_class":null,"frequency_total":null,"frequency_rank":null,"positional_profile":null,"regional_distribution":null,"artifact_distribution":null,"variants":[],"name":null,"interpretation_martin2025":null,"glyph":{"image_path":null,"vector_path":null,"procedural_params":{"stroke":null,"symmetry":null,"density":null}},"holography":{"default_freq":25.0,"sigma":0.06,"harmonics":[[1,1.0,0.0]],"class_profile":"basic"},"sources":{"mahadevan":null,"fuls":null,"harappa_structure":null,"martin":null},"confidence":{"mahadevan_mapping":"unknown","structural_class":"unknown","interpretation":"none"}}
 }

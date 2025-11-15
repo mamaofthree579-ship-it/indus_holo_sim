@@ -17,9 +17,6 @@ st.set_page_config(page_title="Indus Holographic Simulator", layout="wide")
 st.title("🌀 Indus Script — Holographic Frequency Simulator")
 
 # ---------------- Sidebar: mode & NB chooser ----------------
-mode = st.sidebar.selectbox("Glyph rendering mode", ["neutral", "acoustic", "light", "matrix"], index=1)
-selected_nb = st.sidebar.selectbox("Select NB code", NB_LIST)
-
 entry = INDUS_SIGNS[selected_nb]
 glyph_path = entry.get("image_url")
 if not glyph_path:
@@ -31,14 +28,6 @@ if glyph_path:
         st.sidebar.image(Image.open(glyph_path), caption=f"{selected_nb}: {entry.get('name')}", use_column_width=True)
     except Exception:
         st.sidebar.write("Glyph preview unavailable")
-
-st.sidebar.write("---")
-# Generate all glyphs button
-if st.sidebar.button("Generate all 417 glyph thumbnails"):
-    with st.spinner("Generating glyphs (this can take a minute)..."):
-        for nb in NB_LIST:
-            generate_glyph(nb, mode=mode, overwrite=False)
-        st.sidebar.success("All glyphs generated into data/images/")
 
 # ---------------- Symbol parameter inputs ----------------
 st.sidebar.write("## New Symbol Parameters")

@@ -17,7 +17,7 @@ st.set_page_config(page_title="Indus Holographic Simulator", layout="wide")
 st.title("🌀 Indus Script — Holographic Frequency Simulator")
 
 # ---------------- Sidebar: mode & NB chooser ----------------
-mode = st.sidebar.selectbox("Glyph rendering mode", index=1)
+mode = st.sidebar.selectbox("Glyph rendering mode")
 selected_nb = st.sidebar.selectbox("Select NB code", NB_LIST)
 
 entry = INDUS_SIGNS[selected_nb]

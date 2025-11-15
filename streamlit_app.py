@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data.nb_signs import Symbol
+from simulator.symbol import Symbol
 from simulator.simulator import HoloSimulator
 from simulator.grid import create_grid
 

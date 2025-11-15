@@ -16,22 +16,6 @@ from simulator.glyph_generator import generate_glyph
 st.set_page_config(page_title="Indus Holographic Simulator", layout="wide")
 st.title("🌀 Indus Script — Holographic Frequency Simulator")
 
-# ---------------- Sidebar: mode & NB chooser ----------------
-mode = st.sidebar.selectbox("Glyph rendering mode")
-selected_nb = st.sidebar.selectbox("Select NB code", NB_LIST)
-
-entry = INDUS_SIGNS[selected_nb]
-glyph_path = entry.get("image_url")
-if not glyph_path:
-    glyph_path = generate_glyph(selected_nb, mode=mode)
-    entry["image_url"] = glyph_path
-
-if glyph_path:
-    try:
-        st.sidebar.image(Image.open(glyph_path), caption=f"{selected_nb}: {entry.get('name')}", use_column_width=True)
-    except Exception:
-        st.sidebar.write("Glyph preview unavailable")
-
 # ---------------- Symbol parameter inputs ----------------
 st.sidebar.write("## New Symbol Parameters")
 freq = float(st.sidebar.number_input("Base frequency (Hz)", min_value=1.0, max_value=2000.0, value=entry.get("default_freq", 20.0)))

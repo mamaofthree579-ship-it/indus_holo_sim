@@ -1,26 +1,26 @@
 # streamlit_app.py
-
 import streamlit as st
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import imageio
+import io
+import time
+from pathlib import Path
 
-# Imports from your package
 from simulator.symbol import Symbol
 from simulator.simulator import HoloSimulator, create_grid
 from simulator.indus_signs import INDUS_SIGNS, NB_LIST
 from simulator.glyph_generator import generate_glyph
 
 st.set_page_config(page_title="Indus Holographic Simulator", layout="wide")
-st.title("Indus Script — Holographic Frequency Simulator")
+st.title("🌀 Indus Script — Holographic Frequency Simulator")
 
-# ---------------------------------------------------
-# Sidebar: Glyph rendering mode and NB selector
-# ---------------------------------------------------
-mode = st.sidebar.selectbox("Glyph Rendering Mode", ["neutral", "acoustic", "light", "matrix"], index=1)
-selected_nb = st.sidebar.selectbox("NB Code", NB_LIST)
+# ---------------- Sidebar: mode & NB chooser ----------------
+mode = st.sidebar.selectbox("Glyph rendering mode", ["neutral", "acoustic", "light", "matrix"], index=1)
+selected_nb = st.sidebar.selectbox("Select NB code", NB_LIST)
+
 entry = INDUS_SIGNS[selected_nb]
-
 glyph_path = entry.get("image_url")
 if not glyph_path:
     glyph_path = generate_glyph(selected_nb, mode=mode)
@@ -28,45 +28,53 @@ if not glyph_path:
 
 if glyph_path:
     try:
-        im = Image.open(glyph_path)
-        st.sidebar.image(im, caption=f"{selected_nb} — {entry['name']}", use_column_width=True)
-    except Exception as e:
-        st.sidebar.write("(glyph image could not be loaded)")
+        st.sidebar.image(Image.open(glyph_path), caption=f"{selected_nb}: {entry.get('name')}", use_column_width=True)
+    except Exception:
+        st.sidebar.write("Glyph preview unavailable")
 
-# ---------------------------------------------------
-# Symbol parameter inputs
-# ---------------------------------------------------
-st.sidebar.write("### Symbol parameters for new symbol")
-freq = st.sidebar.number_input("Base Frequency (Hz)", min_value=1.0, max_value=2000.0, value=20.0, step=1.0)
-amplitude = st.sidebar.number_input("Amplitude", min_value=0.01, max_value=10.0, value=1.0, step=0.1)
-xpos = st.sidebar.slider("X position", 0.0, 1.0, 0.5)
-ypos = st.sidebar.slider("Y position", 0.0, 1.0, 0.5)
+st.sidebar.write("---")
+# Generate all glyphs button
+if st.sidebar.button("Generate all 417 glyph thumbnails"):
+    with st.spinner("Generating glyphs (this can take a minute)..."):
+        for nb in NB_LIST:
+            generate_glyph(nb, mode=mode, overwrite=False)
+        st.sidebar.success("All glyphs generated into data/images/")
 
-# harmonic controls (ensure float defaults)
-num_harm = st.sidebar.slider("Number of harmonics", 1, 6, 1)
+# ---------------- Symbol parameter inputs ----------------
+st.sidebar.write("## New Symbol Parameters")
+freq = float(st.sidebar.number_input("Base frequency (Hz)", min_value=1.0, max_value=2000.0, value=entry.get("default_freq", 20.0)))
+amplitude = float(st.sidebar.number_input("Amplitude", min_value=0.01, max_value=10.0, value=1.0))
+xpos = float(st.sidebar.slider("X position", 0.0, 1.0, 0.5))
+ypos = float(st.sidebar.slider("Y position", 0.0, 1.0, 0.5))
+sigma = float(st.sidebar.number_input("Spatial sigma", min_value=0.01, max_value=0.5, value=entry.get("sigma", 0.06)))
+
+num_harm = st.sidebar.slider("Harmonics", 1, 6, max(1, len(entry.get("harmonics", []))))
 harmonics = []
+st.sidebar.write("Harmonic params (mult, rel, phase)")
+# try to use defaults from entry
+default_h = entry.get("harmonics", [[1.0,1.0,0.0]])
 for i in range(num_harm):
-    mult = float(st.sidebar.number_input(f"Multiplier {i+1}", min_value=1.0, max_value=10.0, value=float(i+1)))
-    rel = float(st.sidebar.number_input(f"Rel amp {i+1}", min_value=0.0, max_value=2.0, value=1.0))
-    phase = float(st.sidebar.number_input(f"Phase {i+1}", min_value=0.0, max_value=3.1416, value=0.0))
+    d = default_h[i] if i < len(default_h) else [i+1,1.0,0.0]
+    mult = float(st.sidebar.number_input(f"Multiplier {i+1}", min_value=1.0, max_value=10.0, value=float(d[0])))
+    rel = float(st.sidebar.number_input(f"Rel amp {i+1}", min_value=0.0, max_value=5.0, value=float(d[1])))
+    phase = float(st.sidebar.number_input(f"Phase {i+1}", min_value=0.0, max_value=6.28318, value=float(d[2])))
     harmonics.append((mult, rel, phase))
 
-# ---------------------------------------------------
-# Symbol list state and add button
-# ---------------------------------------------------
+# ---------------- Symbol list state ----------------
 if "symbols" not in st.session_state:
     st.session_state.symbols = []
 
 st.sidebar.write("---")
-if st.sidebar.button("Add Symbol"):
+if st.sidebar.button("Add symbol to scene"):
     s = Symbol(
         name=selected_nb,
         base_freq=freq,
         harmonics=harmonics,
         image_path=glyph_path,
+        amplitude=amplitude,
         x=xpos,
         y=ypos,
-        amplitude=amplitude
+        sigma=sigma
     )
     st.session_state.symbols.append(s)
     st.sidebar.success(f"Added {selected_nb}")
@@ -75,27 +83,61 @@ if st.sidebar.button("Clear symbols"):
     st.session_state.symbols = []
     st.sidebar.success("Cleared symbols")
 
-# show current symbols
 st.sidebar.write("### Current symbols")
-for s in st.session_state.symbols:
-    st.sidebar.write(f"- {s.name} @ ({s.x:.2f},{s.y:.2f}) f={s.base_freq}Hz amp={s.amplitude}")
+for i,s in enumerate(st.session_state.symbols):
+    st.sidebar.write(f"{i+1}. {s.name} f={s.base_freq}Hz pos=({s.x:.2f},{s.y:.2f}) amp={s.amplitude}")
 
-# ---------------------------------------------------
-# Grid / simulation controls
-# ---------------------------------------------------
-grid_size = st.slider("Grid Size (pixels)", 100, 400, 200)
-xgrid, ygrid = create_grid(grid_size)
+# ---------------- Simulation controls ----------------
+st.write("## Simulation Controls")
+col1, col2 = st.columns([1,2])
 
+with col1:
+    grid_size = st.slider("Grid size (px)", 100, 400, 200)
+    time_samples = st.slider("Time samples (for animation)", 4, 120, 24)
+    t_max = st.slider("Time window (s)", 0.1, 2.0, 0.8)
+    animate = st.checkbox("Render animation (time evolution)", value=False)
+
+with col2:
+    st.write("Use the canvas below to preview interference.")
+
+# ---------------- Compute & render ----------------
+XX, YY = create_grid(grid_size)
 sim = HoloSimulator()
 
-st.header("Simulation")
-if st.session_state.symbols:
-    field = sim.compute_field(xgrid, ygrid, st.session_state.symbols)
-
-    fig, ax = plt.subplots(figsize=(6,6))
-    ax.imshow(np.abs(field), cmap="magma", origin="lower", extent=(0,1,0,1))
-    ax.set_title("Holographic Interference (magnitude)")
-    ax.axis("off")
-    st.pyplot(fig)
+if not st.session_state.symbols:
+    st.info("No symbols yet — add symbols from the sidebar to begin.")
 else:
-    st.write("Add at least one symbol using the sidebar to run the simulation.")
+    if not animate:
+        # single time snapshot at t=0
+        field = sim.compute_field(XX, YY, st.session_state.symbols, times=0.0)
+        intensity = np.abs(field)
+        intensity /= intensity.max() + 1e-12
+
+        fig, ax = plt.subplots(figsize=(6,6))
+        ax.imshow(intensity, origin="lower", extent=(0,1,0,1), cmap="inferno")
+        ax.set_title("Holographic Intensity (snapshot)")
+        ax.axis("off")
+        st.pyplot(fig)
+    else:
+        # generate frames and show animation; provide download
+        times = np.linspace(0.0, t_max, time_samples)
+        frames = []
+        progress = st.progress(0)
+        for i,t in enumerate(times):
+            field_t = sim.compute_field(XX, YY, st.session_state.symbols, times=float(t))
+            mag = np.abs(field_t)
+            mag /= mag.max() + 1e-12
+            # convert to 8-bit image
+            img = (255 * plt.cm.inferno(mag)[:, :, :3]).astype(np.uint8)
+            frames.append(img)
+            progress.progress((i+1)/len(times))
+        progress.empty()
+
+        # display animation inline as GIF
+        buf = io.BytesIO()
+        imageio.mimsave(buf, frames, format="GIF", fps=max(4, int(len(times)/t_max)))
+        st.image(buf.getvalue(), format="GIF")
+        st.download_button("Download GIF", data=buf.getvalue(), file_name="hologram.gif", mime="image/gif")
+
+st.write("---")
+st.caption("Tip: generate glyphs once (left sidebar) — they are cached in data/images/ for reuse.")

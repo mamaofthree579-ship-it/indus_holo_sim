@@ -18,7 +18,7 @@ st.title("🌀 Indus Script — Holographic Frequency Simulator")
 
 # ---------------- Symbol parameter inputs ----------------
 st.sidebar.write("## New Symbol Parameters")
-freq = float(st.sidebar.number_input("Base frequency (Hz)", min_value=1.0, max_value=2000.0, value=entry.get("default_freq", 20.0)))
+freq = float(st.sidebar.number_input("Base frequency (Hz)", min_value=1.0, max_value=2000.0, value=nb_sign.get("default_freq", 20.0)))
 amplitude = float(st.sidebar.number_input("Amplitude", min_value=0.01, max_value=10.0, value=1.0))
 xpos = float(st.sidebar.slider("X position", 0.0, 1.0, 0.5))
 ypos = float(st.sidebar.slider("Y position", 0.0, 1.0, 0.5))

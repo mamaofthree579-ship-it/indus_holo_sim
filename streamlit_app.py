@@ -5,7 +5,7 @@ import streamlit as st
 # Import local simulator modules
 from simulator.symbol import Symbol
 from simulator.simulator import HoloSimulator, create_grid
-from simulator.glyphs import generate_glyph
+from simulator.glyph_generator import generate_glyph
 
 
 # -------------------------------------------------------------

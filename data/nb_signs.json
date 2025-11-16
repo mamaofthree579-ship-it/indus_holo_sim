@@ -1,19 +1,13 @@
-"NB001": {
-  "icit_id": "ICIT001",
+{
+  "id": 1,
   "class": "SIM",
   "set": 1,
-  "frequency": 2343,
+  "frequency": 228,
+  "sites": ["Mohenjo-daro", "Harappa", ...],
   "positions": {
-    "solo": 1,
-    "initial": 0,
-    "medial": 1,
-    "terminal": 0
-  },
-  "sites": {
-    "MD": 12,
-    "HR": 3,
-    "DK": 0,
-    "SD": 1,
-    ...
+    "initial": 16,
+    "medial": 189,
+    "terminal": 24,
+    "solo": 4
   }
 }

@@ -10,7 +10,7 @@ st.title("Indus Script Holographic-Frequency Simulator")
 # Load database
 # -----------------------------
 try:
-    signs = load_signs_json("signs.json")
+    signs = load_signs_json("data/nb_signs.json")
 except Exception as e:
     st.error(f"Error loading signs.json: {e}")
     st.stop()

@@ -1,83 +1,80 @@
 # simulator/simulator.py
-"""
-Grid generator and HoloSimulator.
 
-- create_grid(size) -> returns (XX, YY) as 2D numpy arrays in normalized [0..1] coords
-- HoloSimulator.compute_field(symbol, grid) -> matplotlib.figure.Figure
-    It computes a simple interference intensity map (time-instant snapshot)
-    and returns a Matplotlib figure for direct st.pyplot(...) display.
-"""
-
+import json
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from typing import Tuple
+from pathlib import Path
 
-def create_grid(size: int = 200) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Create normalized 0..1 grid of shape (size,size).
-    Returns (XX, YY).
-    """
-    xs = np.linspace(0.0, 1.0, size)
-    ys = np.linspace(0.0, 1.0, size)
-    XX, YY = np.meshgrid(xs, ys)
-    return XX, YY
+class Symbol:
+    def __init__(self, symbol_id, metadata):
+        self.id = symbol_id
 
+        # Academic metadata (new)
+        self.icit_id = metadata.get("icit_id")
+        self.sign_class = metadata.get("class")
+        self.set = metadata.get("set")
+        self.frequency = metadata.get("frequency")
 
-class HoloSimulator:
-    def __init__(self):
-        pass
+        self.positions = metadata.get("positions", {
+            "solo": 0,
+            "initial": 0,
+            "medial": 0,
+            "terminal": 0
+        })
 
-    def compute_field(self, symbol, grid, time: float = 0.0) -> Figure:
+        self.sites = metadata.get("sites", {})
+
+        # Old fields kept optional (simulator safety)
+        self.harmonics = metadata.get("harmonics", [])
+        self.wave_class = metadata.get("wave_class", None)
+
+    def generate_wave_matrix(self, mode="acoustic"):
         """
-        Compute a holographic intensity snapshot for a single symbol (or object with same API).
-
-        Args:
-            symbol: Symbol object (has frequency, harmonics, amplitude, x, y, sigma)
-            grid: tuple (XX, YY) as returned by create_grid
-            time: optional time parameter (unused for now except phase offsets)
-
-        Returns:
-            Matplotlib Figure object containing plotted intensity map.
+        Generates a numerical 'holographic' matrix for visualization
+        based on sign metadata (frequency, positional balance, etc.)
         """
-        XX, YY = grid
-        # distances from symbol location (normalized coords)
-        dx = XX - float(symbol.x)
-        dy = YY - float(symbol.y)
-        r = np.sqrt(dx**2 + dy**2) + 1e-9  # avoid zero
+        base_freq = self.frequency if self.frequency else 1
 
-        # spatial envelope (Gaussian)
-        sigma = float(symbol.sigma)
-        env = np.exp(-0.5 * (r**2) / (sigma**2))
+        pos_factor = (
+            self.positions.get("initial", 0)
+            + self.positions.get("medial", 0)
+            + self.positions.get("terminal", 0)
+            + self.positions.get("solo", 0)
+        ) or 1
 
-        # base angular term (use 2*pi*freq as spatial angular factor)
-        # (This is a simple toy model for interference; adjust scaling as you like.)
-        k0 = 2.0 * np.pi * float(symbol.frequency)
+        size = int(min(64, max(16, base_freq % 50 + 16)))
 
-        # complex field initialised to zero
-        field = np.zeros_like(XX, dtype=np.complex128)
+        if mode == "acoustic":
+            x = np.linspace(0, np.pi * 4, size)
+            y = np.linspace(0, np.pi * 4, size)
+            X, Y = np.meshgrid(x, y)
+            return np.sin(X * base_freq / 50) * np.sin(Y * pos_factor / 50)
 
-        # base harmonic
-        field += symbol.amplitude * env * np.exp(1j * (k0 * (-r) + 2.0 * np.pi * symbol.frequency * time))
+        elif mode == "light":
+            x = np.linspace(0, np.pi * 8, size)
+            y = np.linspace(0, np.pi * 8, size)
+            X, Y = np.meshgrid(x, y)
+            return np.cos(X * base_freq / 80) * np.sin(Y * pos_factor / 80)
 
-        # additional harmonics
-        for (mult, rel, ph) in symbol.harmonics:
-            mult = float(mult)
-            rel = float(rel)
-            ph = float(ph)
-            k = 2.0 * np.pi * (symbol.frequency * mult)
-            field += symbol.amplitude * rel * env * np.exp(1j * (k * (-r) + ph + 2.0 * np.pi * (symbol.frequency * mult) * time))
+        elif mode == "matrix":
+            return np.random.rand(size, size)
 
-        # intensity (magnitude squared)
-        intensity = np.abs(field) ** 2
-        # normalize for display
-        intensity = intensity / (intensity.max() + 1e-12)
+        return np.zeros((32, 32))
 
-        # create matplotlib figure to return
-        fig, ax = plt.subplots(figsize=(6, 6))
-        im = ax.imshow(intensity, origin="lower", cmap="magma", extent=(0, 1, 0, 1))
-        ax.set_title(f"Holographic intensity — {symbol.name}")
-        ax.axis("off")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="Normalized intensity")
 
-        return fig
+def load_signs_json(path="signs.json"):
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Cannot find sign file: {path}")
+
+    with open(path, "r") as f:
+        data = json.load(f)
+
+    return {k: Symbol(k, v) for k, v in data.items()}
+
+
+def create_grid(matrix):
+    """ Convert matrix into a normalized grayscale grid for plotting. """
+    m = matrix - matrix.min()
+    if m.max() > 0:
+        m = m / m.max()
+    return m

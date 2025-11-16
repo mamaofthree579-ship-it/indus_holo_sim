@@ -1,17 +1,15 @@
-"NB001": {
-  "icit_id": "ICIT001",
+{
+  "fuls_sign": 1,
   "class": "SIM",
-  "set": 1,
-  "frequency": 2343,
-  "positions": {
-    "solo": 1,
-    "medial": 1,
-    "terminal": 0
-  },
-  "sites": {
-    "MD": 12,
-    "HR": 3,
-    "DK": 0,
-    "SD": 1,
-  }
+  "set": "01",
+  "total_frequency": 228,
+  "positional": { ... },
+  "regional_distribution": { ... },
+  "artifact_distribution": { ... },
+  "icit_ids": [ ... ],
+  "variants": [ ... ],
+  "mahadevan": X or null,
+  "parpola": Y or null,
+  "wells": Z or null,
+  "graphic_stub": { ... }
 }

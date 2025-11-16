@@ -1,135 +1,166 @@
+import os
+import json
 import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
 
+# Import local simulator modules
 from simulator.symbol import Symbol
-from simulator.simulator import HoloSimulator
-from simulator.grid import create_grid
+from simulator.simulator import HoloSimulator, create_grid
+from simulator.glyphs import generate_glyph
 
 
-# --------------------------------------------------------------------------------------
-# Page configuration
-# --------------------------------------------------------------------------------------
-st.set_page_config(
-    page_title="Indus Holographic-Frequency Simulator",
-    layout="wide"
+# -------------------------------------------------------------
+# 1. Load or create NB registry
+# -------------------------------------------------------------
+REGISTRY_PATH = "data/nb_signs.json"
+
+def load_registry():
+    """Load the NB registry file; generate if missing."""
+    if not os.path.exists(REGISTRY_PATH):
+        st.warning("⚠️ nb_signs.json not found — generating empty registry…")
+
+        os.makedirs("data", exist_ok=True)
+
+        # Auto-generate blank registry (NB001–NB417)
+        blank = {}
+        for i in range(1, 418):
+            code = f"NB{i:03d}"
+            blank[code] = {
+                "mahadevan_id": None,
+                "wells_id": None,
+                "fuls_id": None,
+                "structural_class": None,
+                "frequency_total": None,
+                "frequency_rank": None,
+                "positional_profile": None,
+                "regional_distribution": None,
+                "artifact_distribution": None,
+                "variants": [],
+                "name": None,
+                "interpretation_martin2025": None,
+                "glyph": {
+                    "image_path": None,
+                    "vector_path": None,
+                    "procedural_params": {
+                        "stroke": None,
+                        "symmetry": None,
+                        "density": None
+                    }
+                },
+                "holography": {
+                    "default_freq": 25.0,
+                    "sigma": 0.06,
+                    "harmonics": [[1, 1.0, 0.0]],
+                    "class_profile": "basic"
+                },
+                "sources": {
+                    "mahadevan": None,
+                    "fuls": None,
+                    "harappa_structure": None,
+                    "martin": None
+                },
+                "confidence": {
+                    "mahadevan_mapping": "unknown",
+                    "structural_class": "unknown",
+                    "interpretation": "none"
+                }
+            }
+
+        with open(REGISTRY_PATH, "w") as f:
+            json.dump(blank, f, indent=2)
+
+        return blank
+
+    # Existing file — load normally
+    with open(REGISTRY_PATH, "r") as f:
+        return json.load(f)
+
+
+# -------------------------------------------------------------
+# Load registry into memory
+# -------------------------------------------------------------
+registry = load_registry()
+
+
+# -------------------------------------------------------------
+# 2. Streamlit UI
+# -------------------------------------------------------------
+st.title("Indus Script Holographic-Frequency Simulator")
+st.subheader("Procedural Glyphs • Resonance Field • Multi-Harmonic Phase Interference")
+
+
+# Sidebar selection
+symbol_id = st.sidebar.selectbox(
+    "Select NB Sign",
+    list(registry.keys())
 )
 
-st.title("🌀 Indus Script Holographic–Frequency Simulator")
-st.write("Explore wave-based holographic interference patterns encoded by symbolic nodes.")
+symbol_data = registry[symbol_id]
 
 
-# --------------------------------------------------------------------------------------
-# Grid setup
-# --------------------------------------------------------------------------------------
-GRID_SIZE = 256
-XX, YY = create_grid(GRID_SIZE)
+# -------------------------------------------------------------
+# 3. Create Symbol Object
+# -------------------------------------------------------------
+freq = symbol_data.get("holography", {}).get("default_freq", 25.0)
+sigma = symbol_data.get("holography", {}).get("sigma", 0.06)
+harm = symbol_data.get("holography", {}).get("harmonics", [[1, 1.0, 0.0]])
 
-if "symbols" not in st.session_state:
-    st.session_state.symbols = []
-
-
-# --------------------------------------------------------------------------------------
-# Sidebar: Add symbol
-# --------------------------------------------------------------------------------------
-st.sidebar.header("➕ Add a Symbol")
-
-with st.sidebar.form("add_symbol"):
-    name = st.text_input("Symbol Name", "symbol")
-    x = st.slider("X Position", 0.0, 1.0, 0.5)
-    y = st.slider("Y Position", 0.0, 1.0, 0.5)
-
-    base_freq = st.number_input("Base Frequency (Hz)", 1.0, 200.0, 20.0)
-    amplitude = st.number_input("Amplitude", 0.1, 5.0, 1.0)
-    sigma = st.number_input("Spatial Sigma", 0.01, 0.2, 0.06)
-
-    st.write("---")
-    st.write("### Harmonics")
-    num_harm = st.number_input("Number of Harmonics", 1, 6, 1)
-
-    harmonics = []
-    for i in range(num_harm):
-        st.write(f"**Harmonic {i+1}**")
-        mult = st.number_input(f"Multiplier {i+1}", 1.0, 10.0, float(i+1))
-        rel_amp = st.number_input(f"Relative Amp {i+1}", 0.0, 2.0, 1.0)
-        phase = st.number_input(f"Phase Offset {i+1}", 0.0, np.pi, 0.0)
-        harmonics.append((mult, rel_amp, phase))
-
-    submitted = st.form_submit_button("Add Symbol")
-
-if submitted:
-    s = Symbol(
-        name=name,
-        x=x,
-        y=y,
-        base_freq=base_freq,
-        amplitude=amplitude,
-        sigma=sigma,
-        harmonics=harmonics
-    )
-    st.session_state.symbols.append(s)
-    st.success(f"Added symbol '{name}'.")
+symbol = Symbol(
+    name=symbol_id,
+    frequency=freq,
+    sigma=sigma,
+    harmonics=harm
+)
 
 
-# --------------------------------------------------------------------------------------
-# Sidebar: Symbol list + clear
-# --------------------------------------------------------------------------------------
-st.sidebar.write("---")
-st.sidebar.header("📜 Symbols")
+# -------------------------------------------------------------
+# 4. User Harmonic Controls
+# -------------------------------------------------------------
+st.sidebar.markdown("### Harmonic Controls")
 
-if st.session_state.symbols:
-    for s in st.session_state.symbols:
-        st.sidebar.write(f"• **{s.name}** — {s.base_freq} Hz")
-else:
-    st.sidebar.write("No symbols added yet.")
+num_harm = st.sidebar.number_input(
+    "Number of Harmonics",
+    min_value=1,
+    max_value=10,
+    value=len(harm),
+    step=1
+)
 
-if st.sidebar.button("Clear All Symbols"):
-    st.session_state.symbols = []
-    st.sidebar.success("Cleared.")
+user_harmonics = []
+for i in range(num_harm):
+    st.sidebar.markdown(f"##### Harmonic {i+1}")
+    order = st.sidebar.number_input(f"Order {i+1}", 1, 10, value=(harm[i][0] if i < len(harm) else 1))
+    multiplier = float(st.sidebar.number_input(f"Multiplier {i+1}", min_value=0.1, max_value=10.0, value=1.0))
+    phase = float(st.sidebar.number_input(f"Phase {i+1}", min_value=-3.14, max_value=3.14, value=0.0))
+    user_harmonics.append([order, multiplier, phase])
 
-
-# --------------------------------------------------------------------------------------
-# Simulation settings
-# --------------------------------------------------------------------------------------
-st.sidebar.write("---")
-st.sidebar.header("⚙ Simulation Settings")
-
-time_samples = st.sidebar.slider("Time Samples", 10, 200, 60)
-t_max = st.sidebar.slider("Time Window (seconds)", 0.1, 5.0, 1.0)
-
-run_button = st.sidebar.button("Run Simulation")
+symbol.harmonics = user_harmonics
 
 
-# --------------------------------------------------------------------------------------
-# Run simulation
-# --------------------------------------------------------------------------------------
-if run_button:
-    if not st.session_state.symbols:
-        st.warning("Add at least one symbol first.")
-    else:
-        sim = HoloSimulator(XX, YY, time_samples, t_max)
+# -------------------------------------------------------------
+# 5. Generate the procedural glyph
+# -------------------------------------------------------------
+st.markdown("### Generated Glyph")
 
-        for s in st.session_state.symbols:
-            sim.add_symbol(s)
+glyph_img = generate_glyph(symbol_id, mode="vector")
 
-        with st.spinner("Computing holographic interference…"):
-            intensity = sim.simulate()
-
-        fig, ax = plt.subplots(figsize=(7, 7))
-        ax.imshow(intensity, origin="lower", extent=(0, 1, 0, 1))
-        ax.set_title("Holographic Intensity Field")
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-
-        for s in st.session_state.symbols:
-            ax.plot(s.x, s.y, "wo")
-            ax.text(s.x + 0.01, s.y + 0.01, s.name, color="white", fontsize=8)
-
-        st.pyplot(fig)
-
-else:
-    st.info("Add symbols and click **Run Simulation** to generate holographic patterns.")
+st.image(glyph_img, caption=f"Glyph for {symbol_id}", use_column_width=True)
 
 
-st.write("---")
-st.caption("Indus Holographic-Frequency Research Simulator – built with Streamlit.")
+# -------------------------------------------------------------
+# 6. Create holographic field simulation
+# -------------------------------------------------------------
+sim = HoloSimulator()
+
+grid = create_grid(size=200)  # adjustable
+
+field = sim.compute_field(symbol, grid)
+
+st.markdown("### Holographic Resonance Field")
+st.pyplot(field)
+
+
+# -------------------------------------------------------------
+# 7. Show metadata (debug / research view)
+# -------------------------------------------------------------
+with st.expander("Metadata (from nb_signs.json)"):
+    st.json(symbol_data)

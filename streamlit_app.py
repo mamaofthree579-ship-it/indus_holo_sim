@@ -10,9 +10,9 @@ st.title("Indus Script Holographic-Frequency Simulator")
 # Load database
 # -----------------------------
 try:
-    signs = load_signs_json("data/nb_signs.json")
+    signs = load_signs_json("data/nb_signs.json")   # <- FIXED PATH
 except Exception as e:
-    st.error(f"Error loading signs.json: {e}")
+    st.error(f"Error loading nb_signs.json: {e}")
     st.stop()
 
 # -----------------------------

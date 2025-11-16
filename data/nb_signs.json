@@ -1,115 +1,599 @@
-"NB001": {
-  "icit_id": 1,
-  "class": "SIM",
-  "set": 1,
-  "frequency": 228,
-  "positions": {
-    "solo": 4,
-    "initial": 16,
-    "medial": 189,
-    "terminal": 24
+  "NB001": {
+    "icit_id": 1,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 228,
+    "positions": {
+      "solo": 4,
+      "initial": 16,
+      "medial": 189,
+      "terminal": 24
+    },
+    "sites": {
+      "MD": 115,
+      "HR": 50,
+      "DK": 17,
+      "SD": 0,
+      "RJ": 2,
+      "GJ": 22,
+      "PB": 2,
+      "UP": 0,
+      "OTH": 22
+    }
   },
-  "sites": {
-    "MD": 115,
-    "HR": 50,
-    "DK": 17,
-    "SD": 0,
-    "RJ": 2,
-    "GJ": 22,
-    "PB": 2,
-    "UP": 0,
-    "OTH": 22
-  }
-}
-"NB002": {
-  "icit_id": 2,
-  "class": "SIM",
-  "set": 1,
-  "frequency": 867,
-  "positions": {
-    "solo": null,
-    "initial": null,
-    "medial": null,
-    "terminal": null
+
+  "NB002": {
+    "icit_id": 2,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 867,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
   },
-  "sites": {
-    "MD": null,
-    "HR": null,
-    "DK": null,
-    "SD": null,
-    "RJ": null,
-    "GJ": null,
-    "PB": null,
-    "UP": null,
-    "OTH": null
-  }
-}
-"NB003": {
-  "icit_id": 3,
-  "class": "SIM",
-  "set": 1,
-  "frequency": 260,
-  "positions": {
-    "solo": null,
-    "initial": null,
-    "medial": null,
-    "terminal": null
+
+  "NB003": {
+    "icit_id": 3,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 260,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
   },
-  "sites": {
-    "MD": null,
-    "HR": null,
-    "DK": null,
-    "SD": null,
-    "RJ": null,
-    "GJ": null,
-    "PB": null,
-    "UP": null,
-    "OTH": null
-  }
-}
-"NB004": {
-  "icit_id": 4,
-  "class": "SIM",
-  "set": 1,
-  "frequency": 99,
-  "positions": {
-    "solo": null,
-    "initial": null,
-    "medial": null,
-    "terminal": null
+
+  "NB004": {
+    "icit_id": 4,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 99,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
   },
-  "sites": {
-    "MD": null,
-    "HR": null,
-    "DK": null,
-    "SD": null,
-    "RJ": null,
-    "GJ": null,
-    "PB": null,
-    "UP": null,
-    "OTH": null
-  }
-}
-"NB005": {
-  "icit_id": 5,
-  "class": "SIM",
-  "set": 1,
-  "frequency": 49,
-  "positions": {
-    "solo": null,
-    "initial": null,
-    "medial": null,
-    "terminal": null
+
+  "NB005": {
+    "icit_id": 5,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 49,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
   },
-  "sites": {
-    "MD": null,
-    "HR": null,
-    "DK": null,
-    "SD": null,
-    "RJ": null,
-    "GJ": null,
-    "PB": null,
-    "UP": null,
-    "OTH": null
+
+  "NB006": {
+    "icit_id": 6,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 48,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB007": {
+    "icit_id": 7,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 36,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB008": {
+    "icit_id": 8,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 30,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB009": {
+    "icit_id": 9,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 30,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB010": {
+    "icit_id": 10,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 29,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB011": {
+    "icit_id": 11,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 24,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB012": {
+    "icit_id": 12,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 21,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB013": {
+    "icit_id": 13,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 21,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB014": {
+    "icit_id": 14,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 18,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB015": {
+    "icit_id": 15,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 18,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB016": {
+    "icit_id": 16,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 18,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB017": {
+    "icit_id": 17,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 17,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB018": {
+    "icit_id": 18,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 17,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB019": {
+    "icit_id": 19,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 16,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB020": {
+    "icit_id": 20,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 15,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB021": {
+    "icit_id": 21,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 14,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB022": {
+    "icit_id": 22,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 14,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB023": {
+    "icit_id": 23,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 13,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB024": {
+    "icit_id": 24,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 13,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
+  },
+
+  "NB025": {
+    "icit_id": 25,
+    "class": "SIM",
+    "set": 1,
+    "frequency": 12,
+    "positions": {
+      "solo": null,
+      "initial": null,
+      "medial": null,
+      "terminal": null
+    },
+    "sites": {
+      "MD": null,
+      "HR": null,
+      "DK": null,
+      "SD": null,
+      "RJ": null,
+      "GJ": null,
+      "PB": null,
+      "UP": null,
+      "OTH": null
+    }
   }
-}

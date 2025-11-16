@@ -1,5 +1,3 @@
-# streamlit_app.py
-
 import streamlit as st
 import numpy as np
 from simulator.simulator import load_signs_json, create_grid
@@ -7,7 +5,7 @@ from simulator.simulator import load_signs_json, create_grid
 st.title("Indus Script Holographic-Frequency Simulator")
 
 # Load database
-signs = load_signs_json("nb_signs.json")
+signs = load_nb_signs_json("nb_signs.json")
 
 # Sidebar
 nb_list = sorted(signs.keys())

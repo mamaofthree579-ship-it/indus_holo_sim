@@ -59,7 +59,7 @@ class Symbol:
         return np.zeros((32, 32))
 
 
-def load_signs_json(path="nb_signs.json"):
+def load_signs_json(path="data/nb_signs.json"):
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Cannot find sign file: {path}")

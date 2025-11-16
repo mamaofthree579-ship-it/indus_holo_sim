@@ -1,4 +1,3 @@
-# simulator/glyphs.py
 """
 Simple procedural glyph generator.
 Produces deterministic PNG thumbnails for codes like "NB001".

@@ -1,15 +1,115 @@
-{
-  "fuls_sign": 1,
+"NB001": {
+  "icit_id": 1,
   "class": "SIM",
-  "set": "01",
-  "total_frequency": 228,
-  "positional": { ... },
-  "regional_distribution": { ... },
-  "artifact_distribution": { ... },
-  "icit_ids": [ ... ],
-  "variants": [ ... ],
-  "mahadevan": X or null,
-  "parpola": Y or null,
-  "wells": Z or null,
-  "graphic_stub": { ... }
+  "set": 1,
+  "frequency": 228,
+  "positions": {
+    "solo": 4,
+    "initial": 16,
+    "medial": 189,
+    "terminal": 24
+  },
+  "sites": {
+    "MD": 115,
+    "HR": 50,
+    "DK": 17,
+    "SD": 0,
+    "RJ": 2,
+    "GJ": 22,
+    "PB": 2,
+    "UP": 0,
+    "OTH": 22
+  }
+}
+"NB002": {
+  "icit_id": 2,
+  "class": "SIM",
+  "set": 1,
+  "frequency": 867,
+  "positions": {
+    "solo": null,
+    "initial": null,
+    "medial": null,
+    "terminal": null
+  },
+  "sites": {
+    "MD": null,
+    "HR": null,
+    "DK": null,
+    "SD": null,
+    "RJ": null,
+    "GJ": null,
+    "PB": null,
+    "UP": null,
+    "OTH": null
+  }
+}
+"NB003": {
+  "icit_id": 3,
+  "class": "SIM",
+  "set": 1,
+  "frequency": 260,
+  "positions": {
+    "solo": null,
+    "initial": null,
+    "medial": null,
+    "terminal": null
+  },
+  "sites": {
+    "MD": null,
+    "HR": null,
+    "DK": null,
+    "SD": null,
+    "RJ": null,
+    "GJ": null,
+    "PB": null,
+    "UP": null,
+    "OTH": null
+  }
+}
+"NB004": {
+  "icit_id": 4,
+  "class": "SIM",
+  "set": 1,
+  "frequency": 99,
+  "positions": {
+    "solo": null,
+    "initial": null,
+    "medial": null,
+    "terminal": null
+  },
+  "sites": {
+    "MD": null,
+    "HR": null,
+    "DK": null,
+    "SD": null,
+    "RJ": null,
+    "GJ": null,
+    "PB": null,
+    "UP": null,
+    "OTH": null
+  }
+}
+"NB005": {
+  "icit_id": 5,
+  "class": "SIM",
+  "set": 1,
+  "frequency": 49,
+  "positions": {
+    "solo": null,
+    "initial": null,
+    "medial": null,
+    "terminal": null
+  },
+  "sites": {
+    "MD": null,
+    "HR": null,
+    "DK": null,
+    "SD": null,
+    "RJ": null,
+    "GJ": null,
+    "PB": null,
+    "UP": null,
+    "OTH": null
+  }
 }

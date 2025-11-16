@@ -5,7 +5,6 @@
   "frequency": 2343,
   "positions": {
     "solo": 1,
-    "initial": 0,
     "medial": 1,
     "terminal": 0
   },

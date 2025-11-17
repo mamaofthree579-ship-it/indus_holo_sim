@@ -1,19 +1,38 @@
-# streamlit_app.py
-
 import streamlit as st
-import numpy as np
-from simulator.simulator import load_signs_json, create_grid
+from simulator.simulator import load_signs_json, create_grid, HoloSimulator, Symbol
+from pathlib import Path
+import os
 
-st.title("Indus Script Holographic-Frequency Simulator")
+st.title("Indus Holographic Simulator — Glyph Stimuli")
 
 # -----------------------------
 # Load database
 # -----------------------------
-try:
-    signs = load_signs_json("data/nb_signs.json")   # <- FIXED PATH
-except Exception as e:
-    st.error(f"Error loading nb_signs.json: {e}")
-    st.stop()
+
+signs = load_signs_json("data/nb_signs.json")
+nb = st.sidebar.selectbox("Select NB sign", sorted(signs.keys()))
+
+# Choose whether to use synthetic or glyph-driven
+mode = st.sidebar.radio("Stimulus", ["synthetic", "glyph"])
+if mode == "glyph":
+    glyph_dir = Path("data/images")
+    glyph_path = glyph_dir / f"{nb}_mask.png"
+    if not glyph_path.exists():
+        st.warning(f"No glyph mask found for {nb}. Run glyph generator to create {glyph_path}.")
+    else:
+        stim_mode = st.sidebar.selectbox("Field type", ["holo","light","acoustic","mask"])
+        symbol = signs[nb]
+        holo = HoloSimulator()
+        fig = holo.compute_field_from_glyph(symbol, str(glyph_path), mode=stim_mode)
+        st.pyplot(fig)
+else:
+    # synthetic
+    symbol = signs[nb]
+    holo = HoloSimulator()
+    grid = create_grid(256)
+    fig = holo.compute_field(symbol, grid)
+    st.pyplot(fig)
+
 
 # -----------------------------
 # Sidebar selection

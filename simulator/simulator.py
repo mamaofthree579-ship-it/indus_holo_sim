@@ -1,43 +1,53 @@
+# simulator/simulator.py
+
 import json
 import numpy as np
 from pathlib import Path
+
+def safe_int(value, default=0):
+    """Convert None to default, pass through ints, ignore bad types."""
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except:
+        return default
 
 class Symbol:
     def __init__(self, symbol_id, metadata):
         self.id = symbol_id
 
-        # Academic metadata (new)
+        # Academic metadata
         self.icit_id = metadata.get("icit_id")
         self.sign_class = metadata.get("class")
         self.set = metadata.get("set")
-        self.frequency = metadata.get("frequency")
+        self.frequency = safe_int(metadata.get("frequency"), default=1)
 
-        self.positions = metadata.get("positions", {
-            "solo": 0,
-            "initial": 0,
-            "medial": 0,
-            "terminal": 0
-        })
+        pos = metadata.get("positions", {})
+        self.positions = {
+            "solo": safe_int(pos.get("solo")),
+            "initial": safe_int(pos.get("initial")),
+            "medial": safe_int(pos.get("medial")),
+            "terminal": safe_int(pos.get("terminal"))
+        }
 
-        self.sites = metadata.get("sites", {})
-
-        # Old fields kept optional (simulator safety)
-        self.harmonics = metadata.get("harmonics", [])
-        self.wave_class = metadata.get("wave_class", None)
+        sites = metadata.get("sites", {})
+        self.sites = {k: safe_int(v) for k, v in sites.items()}
 
     def generate_wave_matrix(self, mode="acoustic"):
         """
-        Generates a numerical 'holographic' matrix for visualization
-        based on sign metadata (frequency, positional balance, etc.)
+        Generates a holographic matrix with robust handling for null values.
         """
-        base_freq = self.frequency if self.frequency else 1
+        base_freq = max(1, self.frequency)
 
         pos_factor = (
-            self.positions.get("initial", 0)
-            + self.positions.get("medial", 0)
-            + self.positions.get("terminal", 0)
-            + self.positions.get("solo", 0)
-        ) or 1
+            self.positions["initial"]
+            + self.positions["medial"]
+            + self.positions["terminal"]
+            + self.positions["solo"]
+        )
+        if pos_factor == 0:
+            pos_factor = 1
 
         size = int(min(64, max(16, base_freq % 50 + 16)))
 
@@ -71,7 +81,6 @@ def load_signs_json(path="data/nb_signs.json"):
 
 
 def create_grid(matrix):
-    """ Convert matrix into a normalized grayscale grid for plotting. """
     m = matrix - matrix.min()
     if m.max() > 0:
         m = m / m.max()

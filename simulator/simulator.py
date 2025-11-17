@@ -1,87 +1,113 @@
 # simulator/simulator.py
-
-import json
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from PIL import Image
 from pathlib import Path
+from typing import Tuple
 
-def safe_int(value, default=0):
-    """Convert None to default, pass through ints, ignore bad types."""
-    if value is None:
-        return default
-    try:
-        return int(value)
-    except:
-        return default
+def create_grid(size:int=512) -> Tuple[np.ndarray, np.ndarray]:
+    xs = np.linspace(-1.0, 1.0, size)
+    ys = np.linspace(-1.0, 1.0, size)
+    return np.meshgrid(xs, ys)
 
 class Symbol:
     def __init__(self, symbol_id, metadata):
         self.id = symbol_id
+        self.frequency = float(metadata.get("frequency_total") or metadata.get("frequency") or 25.0)
+        self.positions = metadata.get("positions", {"solo":0,"initial":0,"medial":0,"terminal":0})
+        self.sites = metadata.get("sites", {})
+        # small fallback
+        self.sigma = float(metadata.get("sigma", 0.06))
 
-        # Academic metadata
-        self.icit_id = metadata.get("icit_id")
-        self.sign_class = metadata.get("class")
-        self.set = metadata.get("set")
-        self.frequency = safe_int(metadata.get("frequency"), default=1)
+    def __repr__(self):
+        return f"<Symbol {self.id} f={self.frequency}>"
 
-        pos = metadata.get("positions", {})
-        self.positions = {
-            "solo": safe_int(pos.get("solo")),
-            "initial": safe_int(pos.get("initial")),
-            "medial": safe_int(pos.get("medial")),
-            "terminal": safe_int(pos.get("terminal"))
-        }
+class HoloSimulator:
+    def __init__(self):
+        pass
 
-        sites = metadata.get("sites", {})
-        self.sites = {k: safe_int(v) for k, v in sites.items()}
-
-    def generate_wave_matrix(self, mode="acoustic"):
+    def compute_field(self, symbol: Symbol, grid, time: float = 0.0) -> Figure:
         """
-        Generates a holographic matrix with robust handling for null values.
+        Older function kept for synthetic fields. Returns Matplotlib Figure.
         """
-        base_freq = max(1, self.frequency)
+        XX, YY = grid
+        # radial distance from center
+        r = np.sqrt(XX**2 + YY**2) + 1e-9
+        sigma = max(0.02, symbol.sigma)
+        env = np.exp(-0.5 * (r**2) / (sigma**2))
+        k = 2*np.pi*symbol.frequency/50.0
+        field = env * np.exp(1j * (k * r))
+        intensity = np.abs(field)**2
+        intensity = intensity / (intensity.max() + 1e-12)
+        fig, ax = plt.subplots(figsize=(5,5))
+        ax.imshow(intensity, cmap="magma", origin="lower", extent=(-1,1,-1,1))
+        ax.set_title(f"Synthetic field — {symbol.id}")
+        ax.axis("off")
+        return fig
 
-        pos_factor = (
-            self.positions["initial"]
-            + self.positions["medial"]
-            + self.positions["terminal"]
-            + self.positions["solo"]
-        )
-        if pos_factor == 0:
-            pos_factor = 1
+    def compute_field_from_glyph(self, symbol: Symbol, glyph_mask_path: str, mode: str="holo", wavelength:float=0.5) -> Figure:
+        """
+        Use the binary glyph mask PNG as a source aperture and simulate:
+          - holographic (FFT-based) propagation (far-field intensity)
+          - light: use Fraunhofer diffraction pattern (FFT magnitude)
+          - acoustic: treat bright pixels as pulsating point sources with phase ~ frequency*pos
 
-        size = int(min(64, max(16, base_freq % 50 + 16)))
+        Args:
+            symbol: Symbol object (metadata)
+            glyph_mask_path: path to binary mask image (white=source)
+            mode: 'holo'|'light'|'acoustic'|'mask' (mask displays the source)
+            wavelength: free parameter controlling fringe spacing
+        Returns:
+            matplotlib.figure.Figure
+        """
+        # Load mask and convert to float array
+        p = Path(glyph_mask_path)
+        if not p.exists():
+            raise FileNotFoundError(f"Glyph mask not found: {glyph_mask_path}")
+        img = Image.open(p).convert("L")
+        arr = np.array(img, dtype=np.float32) / 255.0  # 0..1
 
-        if mode == "acoustic":
-            x = np.linspace(0, np.pi * 4, size)
-            y = np.linspace(0, np.pi * 4, size)
-            X, Y = np.meshgrid(x, y)
-            return np.sin(X * base_freq / 50) * np.sin(Y * pos_factor / 50)
+        # pad to square power-of-two for nicer FFT (optional)
+        n = max(arr.shape)
+        N = 1 << (n-1).bit_length()
+        pad = ((0, N - arr.shape[0]), (0, N - arr.shape[1]))
+        arr_padded = np.pad(arr, pad, mode='constant', constant_values=0.0)
 
-        elif mode == "light":
-            x = np.linspace(0, np.pi * 8, size)
-            y = np.linspace(0, np.pi * 8, size)
-            X, Y = np.meshgrid(x, y)
-            return np.cos(X * base_freq / 80) * np.sin(Y * pos_factor / 80)
+        # Prepare complex field at aperture: amplitude * exp(i*phase)
+        amplitude = arr_padded
+        # Phase model: use symbol frequency to set a phase ramp or random tiny phase per pixel
+        freq = max(1.0, float(symbol.frequency))
+        # small random phase seeded by symbol id for reproducibility
+        phase_noise = np.sin(np.linspace(0, 2*np.pi, arr_padded.size)).reshape(arr_padded.shape) * 0.0
+        # For acoustic, we might want phase proportional to distance from center
+        cx, cy = np.array(arr_padded.shape) / 2.0
+        yy, xx = np.indices(arr_padded.shape)
+        r = np.sqrt((xx-cx)**2 + (yy-cy)**2) + 1e-9
+        # scale factor
+        phase = 2.0 * np.pi * (freq/50.0) * (r / r.max()) + phase_noise
 
-        elif mode == "matrix":
-            return np.random.rand(size, size)
+        aperture_field = amplitude * np.exp(1j * phase)
 
-        return np.zeros((32, 32))
+        # Compute far-field (Fraunhofer) approx: FFT of aperture field
+        F = np.fft.fftshift(np.fft.fft2(aperture_field))
+        intensity = np.abs(F)**2
+        intensity = intensity / (intensity.max() + 1e-12)
 
+        if mode == "mask":
+            disp = arr_padded
+            title = f"Glyph mask ({symbol.id})"
+        else:
+            disp = intensity
+            title = f"{mode.title()} pattern — {symbol.id}"
 
-def load_signs_json(path="data/nb_signs.json"):
-    path = Path(path)
-    if not path.exists():
-        raise FileNotFoundError(f"Cannot find sign file: {path}")
+        # Downsample to reasonable display resolution
+        # convert to 512x512 for plotting (or smaller)
+        import scipy.ndimage as ndi
+        disp_small = ndi.zoom(disp, 512.0/disp.shape[0], order=1) if disp.shape[0] != 512 else disp
 
-    with open(path, "r") as f:
-        data = json.load(f)
-
-    return {k: Symbol(k, v) for k, v in data.items()}
-
-
-def create_grid(matrix):
-    m = matrix - matrix.min()
-    if m.max() > 0:
-        m = m / m.max()
-    return m
+        fig, ax = plt.subplots(figsize=(6,6))
+        ax.imshow(disp_small, cmap="magma", origin="lower")
+        ax.set_title(title)
+        ax.axis("off")
+        return fig

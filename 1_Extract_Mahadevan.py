@@ -1,151 +1,115 @@
-# pages/1_Extract_Mahadevan.py
 import streamlit as st
 from pathlib import Path
-import requests
-import traceback
-import os
-import zipfile
+import requests, traceback, io, zipfile
+from pypdf import PdfReader
+from reportlab.graphics import renderPM
+from svglib.svglib import svg2rlg
 
-st.title("Mahadevan PDF Extractor — Temp-Safe Version")
+st.title("Mahadevan PDF Extractor — Pure Python Mode")
 
-# ---------------------------------------------------------
-# Use /tmp/ for everything (always writable in Streamlit)
-# ---------------------------------------------------------
 TMP = Path("/tmp")
 PDF_PATH = TMP / "mahadevan_full.pdf"
-OUT_ROOT = TMP / "mahadevan_extracted"
-PAGES_DIR = OUT_ROOT / "pages_png"
-EMBED_DIR = OUT_ROOT / "embedded_images"
 
-for d in [OUT_ROOT, PAGES_DIR, EMBED_DIR]:
+OUT_ROOT = TMP / "mahadevan_extracted"
+SVG_DIR = OUT_ROOT / "pages_svg"
+PNG_DIR = OUT_ROOT / "pages_png"
+
+for d in (OUT_ROOT, SVG_DIR, PNG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 ARCHIVE_URL = (
     "https://archive.org/download/"
     "TheIndusScript.TextConcordanceAndTablesIravathanMahadevan/"
-    "The%20Indus%20Script.%20Text%2C%20Concordance%20and%20Tables%20"
-    "-Iravathan%20Mahadevan.pdf"
+    "The%20Indus%20Script.%20Text%2C%20Concordance%20and%20Tables%20-Iravathan%20Mahadevan.pdf"
 )
 
-st.write("Download location:", PDF_PATH)
-
-# ---------------------------------------------------------
-# Download PDF if not present
-# ---------------------------------------------------------
+# ----------------------------------------------------------
+# Download PDF
+# ----------------------------------------------------------
 if not PDF_PATH.exists():
-    st.info("Downloading Mahadevan PDF to /tmp/ …")
+    st.info("Downloading Mahadevan PDF…")
     try:
-        with requests.get(ARCHIVE_URL, stream=True, timeout=90) as r:
-            r.raise_for_status()
-            with open(PDF_PATH, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-        st.success("PDF downloaded to /tmp/")
-    except Exception:
-        st.error("Download failed:")
+        r = requests.get(ARCHIVE_URL, stream=True)
+        with open(PDF_PATH, "wb") as f:
+            for chunk in r.iter_content(8192):
+                f.write(chunk)
+        st.success("PDF downloaded.")
+    except Exception as e:
+        st.error("Download failed.")
         st.text(traceback.format_exc())
         st.stop()
 else:
     st.success("PDF already downloaded.")
 
-# ---------------------------------------------------------
-# Extraction
-# ---------------------------------------------------------
-if st.button("Extract Pages and Embedded Glyphs"):
-    st.info("Extracting… This may take a few minutes.")
-    progress = st.progress(0)
+# ----------------------------------------------------------
+# Convert PDF pages → SVG → PNG
+# ----------------------------------------------------------
+def convert_page_to_svg(page, output_svg):
+    """
+    Very simplified SVG wrapper: writes text-only content.
+    We will still get page layout, images may not convert.
+    """
+    content = page.extract_text() or ""
+    svg = f"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600">
+        <style> text {{ font-size:18px; font-family:Helvetica; }} </style>
+        <text x="50" y="50">{content.replace("&","&amp;").replace("<","&lt;")}</text>
+    </svg>
+    """
+    output_svg.write_text(svg)
 
+if st.button("Extract Pages"):
     try:
-        try:
-            import fitz  # PyMuPDF
-            st.write("Using PyMuPDF…")
+        reader = PdfReader(str(PDF_PATH))
+        total = len(reader.pages)
+        progress = st.progress(0.0)
 
-            doc = fitz.open(str(PDF_PATH))
-            total_pages = len(doc)
+        for i, page in enumerate(reader.pages):
+            svg_path = SVG_DIR / f"page_{i+1:03d}.svg"
+            png_path = PNG_DIR / f"page_{i+1:03d}.png"
 
-            for i in range(total_pages):
-                page = doc[i]
+            # Create SVG version
+            convert_page_to_svg(page, svg_path)
 
-                # extract embedded images
-                image_list = page.get_images(full=True)
-                if image_list:
-                    for j, img in enumerate(image_list):
-                        xref = img[0]
-                        base_img = doc.extract_image(xref)
-                        bytes_ = base_img["image"]
-                        ext = base_img.get("ext", "png")
+            # Render to PNG
+            drawing = svg2rlg(str(svg_path))
+            renderPM.drawToFile(
+                drawing,
+                str(png_path),
+                fmt="PNG",
+                dpi=150
+            )
 
-                        out_img = EMBED_DIR / f"page{i+1:03d}_img{j+1}.{ext}"
-                        with open(out_img, "wb") as f:
-                            f.write(bytes_)
+            progress.progress((i+1) / total)
 
-                # render page
-                pix = page.get_pixmap(matrix=fitz.Matrix(2,2))
-                out_page = PAGES_DIR / f"page_{i+1:03d}.png"
-                pix.save(str(out_page))
-
-                progress.progress((i+1)/total_pages)
-
-            st.success("Extraction complete!")
-        except Exception as fitz_err:
-            st.warning("PyMuPDF failed. Trying pdf2image…")
-            try:
-                from pdf2image import convert_from_path
-                pages = convert_from_path(str(PDF_PATH), dpi=150)
-                total = len(pages)
-                for i, im in enumerate(pages):
-                    out_page = PAGES_DIR / f"page_{i+1:03d}.png"
-                    im.save(out_page)
-                    progress.progress((i+1)/total)
-                st.success("pdf2image extraction complete!")
-            except Exception as pdf_err:
-                st.error("Both extractors failed.")
-                st.text("PYMUPDF ERROR:\n" + str(fitz_err))
-                st.text("PDF2IMAGE ERROR:\n" + str(pdf_err))
-                st.stop()
+        st.success(f"Extracted {total} pages into /tmp/")
 
     except Exception as e:
-        st.error("Unexpected extraction error:")
+        st.error("Extraction failed:")
         st.text(traceback.format_exc())
-        st.stop()
 
-
-# ---------------------------------------------------------
+# ----------------------------------------------------------
 # Previews
-# ---------------------------------------------------------
-st.write("---")
-st.subheader("Preview Extracted Pages")
+# ----------------------------------------------------------
+png_files = list(PNG_DIR.glob("*.png"))
+if png_files:
+    st.subheader("Preview Page Images")
+    for p in png_files[:6]:
+        st.image(str(p), caption=p.name)
 
-page_files = sorted(PAGES_DIR.glob("*.png"))
-if page_files:
-    cols = st.columns(3)
-    for i, p in enumerate(page_files[:9]):
-        with cols[i % 3]:
-            st.image(str(p), caption=p.name, use_column_width=True)
+# ----------------------------------------------------------
+# Download ZIP
+# ----------------------------------------------------------
+if png_files:
+    if st.button("Download all as ZIP"):
+        zip_path = TMP / "mahadevan_pages.zip"
+        with zipfile.ZipFile(zip_path, "w") as z:
+            for p in png_files:
+                z.write(p, p.name)
 
-st.subheader("Preview Embedded Images")
-
-embed_files = sorted(EMBED_DIR.glob("*.*"))
-if embed_files:
-    cols = st.columns(3)
-    for i, p in enumerate(embed_files[:9]):
-        with cols[i % 3]:
-            st.image(str(p), caption=p.name, use_column_width=True)
-
-# ---------------------------------------------------------
-# ZIP Download
-# ---------------------------------------------------------
-if st.button("Download All Extracted Pages (ZIP)"):
-    zip_path = TMP / "mahadevan_pages.zip"
-    with zipfile.ZipFile(zip_path, "w") as z:
-        for p in PAGES_DIR.glob("*.png"):
-            z.write(p, p.name)
-
-    with open(zip_path, "rb") as f:
-        st.download_button(
-            "Download ZIP",
-            f.read(),
-            file_name="mahadevan_pages.zip",
-            mime="application/zip"
-        )
+        with open(zip_path, "rb") as f:
+            st.download_button(
+                "Download ZIP",
+                f.read(),
+                file_name="mahadevan_pages.zip"
+            )

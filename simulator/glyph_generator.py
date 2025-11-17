@@ -1,81 +1,84 @@
-"""
-Simple procedural glyph generator.
-Produces deterministic PNG thumbnails for codes like "NB001".
-Returns the path to the PNG image (string) which can be passed to st.image().
-"""
-
+# simulator/glyphs_generate.py
+# Usage: python simulator/glyphs_generate.py --start 3 --end 25
+import argparse
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
-import math
-import numpy as np
+import math, hashlib, numpy as np
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "images"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+def seed_from_code(code: str) -> int:
+    h = hashlib.sha256(code.encode()).digest()
+    return int.from_bytes(h[:4], "big")
 
-def _code_seed(code: str) -> int:
-    s = code.upper().strip()
-    clean = "".join(ch for ch in s if ch.isalnum())
-    h = 0
-    for c in clean:
-        h = (h * 131 + ord(c)) & 0xFFFFFFFF
-    return int(h)
-
-
-def generate_glyph(code: str, mode: str = "vector", size: int = 256, overwrite: bool = False) -> str:
-    """
-    Generate and save a PNG glyph for `code`. Returns the absolute path string.
-    Modes: "vector", "acoustic", "light", "matrix" (vector is same as neutral)
-    """
-    code = code.upper()
-    out_path = OUT_DIR / f"{code}.png"
-    if out_path.exists() and not overwrite:
-        return str(out_path)
-
-    seed = _code_seed(code)
+def draw_glyph_image(code: str, size:int=512):
+    seed = seed_from_code(code)
     rng = np.random.default_rng(seed)
-
-    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+    img = Image.new("RGBA", (size, size), (255,255,255,0))
     draw = ImageDraw.Draw(img, "RGBA")
-    cx, cy = size // 2, size // 2
-    stroke = max(2, size // 36)
+    cx, cy = size//2, size//2
 
-    # background rings dependent on mode
-    for i in range(8, 0, -1):
-        t = i / 8.0
-        if mode in ("acoustic",):
-            col = (20, 60 + int(120 * t), 170, int(12 * t))
-        elif mode in ("light",):
-            col = (240, 240, 255, int(10 * t))
-        elif mode in ("matrix",):
-            col = (20, 200 - int(100 * t), 100, int(14 * t))
-        else:
-            col = (200 - int(80 * t), 200 - int(80 * t), 220, int(10 * t))
-        r = int((size * 0.48) * t)
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+    # background subtle ring
+    for i in range(3,0,-1):
+        t = i/3.0
+        r = int(size*0.48*t)
+        col = (200, 200, 220, int(10*t))
+        draw.ellipse((cx-r, cy-r, cx+r, cy+r), fill=col)
 
-    # primitives drawn deterministically
+    # central motif (deterministic)
     n = 3 + (seed % 5)
     for i in range(n):
-        ang = 2.0 * math.pi * ((seed >> (i * 3)) % 360) / 360.0
+        ang = (seed >> (i*3)) & 0xFF
+        theta = ang/255.0 * 2*math.pi
         r = (size * 0.18) + i * (size * 0.08)
-        x1 = cx + r * math.cos(ang)
-        y1 = cy + r * math.sin(ang)
-        x2 = cx + (r * 0.4) * math.cos(ang + 0.7)
-        y2 = cy + (r * 0.4) * math.sin(ang + 0.7)
-        color = (int(220 - i * 20), int(220 - i * 12), 240, 220)
-        draw.line([(x1, y1), (x2, y2)], fill=color, width=stroke)
+        x1 = cx + r * math.cos(theta)
+        y1 = cy + r * math.sin(theta)
+        x2 = cx + (r * 0.4) * math.cos(theta + 0.7)
+        y2 = cy + (r * 0.4) * math.sin(theta + 0.7)
+        stroke = max(2, size // 48 - i)
+        color = (int(220 - i*18), int(180 - i*10), 240, 220)
+        draw.line([(x1,y1),(x2,y2)], fill=color, width=stroke)
 
-    # small dots
+    # small dots around center
     for k in range(6):
         a = 2.0 * math.pi * (k / 6.0 + (seed % 10) * 0.01)
         rr = size * (0.05 + 0.02 * (k % 3))
         dx = cx + rr * math.cos(a)
         dy = cy + rr * math.sin(a)
-        draw.ellipse([dx - 3, dy - 3, dx + 3, dy + 3], fill=(255, 255, 255, 200))
+        draw.ellipse([dx-4, dy-4, dx+4, dy+4], fill=(255,255,255,200))
 
-    # subtle glow
-    glow = img.filter(ImageFilter.GaussianBlur(radius=2))
+    # subtle blur and save
+    glow = img.filter(ImageFilter.GaussianBlur(radius=1.5))
     combined = Image.alpha_composite(glow, img)
-    combined.save(out_path, format="PNG")
-    return str(out_path)
+    return combined
+
+def make_binary_mask(img: Image.Image, threshold:int=40):
+    # Convert RGBA -> grayscale -> binary mask
+    gray = img.convert("L")
+    bw = gray.point(lambda p: 255 if p > threshold else 0)
+    # Slight blur to soften edges for more realistic holographic patterns
+    bw = bw.filter(ImageFilter.GaussianBlur(radius=1))
+    return bw
+
+def generate_range(start:int=3, end:int=25, size:int=512):
+    outputs = []
+    for i in range(start, end+1):
+        code = f"NB{i:03d}"
+        img = draw_glyph_image(code, size=size)
+        mask = make_binary_mask(img, threshold=30)
+        img_path = OUT_DIR / f"{code}.png"
+        mask_path = OUT_DIR / f"{code}_mask.png"
+        img.save(img_path, format="PNG")
+        mask.save(mask_path, format="PNG")
+        outputs.append((code, img_path, mask_path))
+    return outputs
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--start", type=int, default=3)
+    parser.add_argument("--end", type=int, default=25)
+    parser.add_argument("--size", type=int, default=512)
+    args = parser.parse_args()
+    out = generate_range(args.start, args.end, args.size)
+    print("Generated:", out)

@@ -1,19 +1,30 @@
-# pages/1_Extract_Mahadevan.py
 import streamlit as st
 from pathlib import Path
+import requests
 import traceback
-import io
 
-st.title("Mahadevan PDF — Page & Embedded Image Extractor")
+BASE = Path(__file__).resolve().parent.parent
+DATA = BASE / "data"
+PDF_PATH = DATA / "mahadevan_full.pdf"
+ARCHIVE_URL = "https://archive.org/download/TheIndusScript.TextConcordanceAndTablesIravathanMahadevan/The%20Indus%20Script.%20Text%2C%20Concordance%20and%20Tables%20-Iravathan%20Mahadevan.pdf"
 
-# Path to the Mahadevan PDF as uploaded in the repo
-PDF_PATH = Path("data") / "The Indus Script. Text, Concordance and Tables -Iravatham Mahadevan.pdf"
-OUT_ROOT = Path("data") / "mahadevan_extracted"
+DATA.mkdir(parents=True, exist_ok=True)
+
+if not PDF_PATH.exists():
+    st.info("Downloading Mahadevan PDF … please wait")
+    try:
+        r = requests.get(ARCHIVE_URL, stream=True, timeout=60)
+        with open(PDF_PATH, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        st.success("Downloaded PDF successfully.")
+    except Exception as e:
+        st.error("Failed to download PDF. Provide it manually.")
+        st.text(traceback.format_exc())
+        st.stop()
 PAGES_DIR = OUT_ROOT / "pages_png"
 EMBED_DIR = OUT_ROOT / "embedded_images"
-
-for d in (OUT_ROOT, PAGES_DIR, EMBED_DIR):
-    d.mkdir(parents=True, exist_ok=True)
 
 st.write("PDF path:", PDF_PATH)
 

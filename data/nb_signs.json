@@ -29,21 +29,21 @@
     "set": 1,
     "frequency": 867,
     "positions": {
-      "solo": null,
-      "initial": null,
-      "medial": null,
-      "terminal": null
+      "solo": 13,
+      "initial": 32,
+      "medial": 767,
+      "terminal": 52
     },
     "sites": {
-      "MD": null,
-      "HR": null,
-      "DK": null,
-      "SD": null,
-      "RJ": null,
-      "GJ": null,
-      "PB": null,
-      "UP": null,
-      "OTH": null
+      "MD": 43,
+      "HR": 222,
+      "DK": 41,
+      "SD": 0,
+      "RJ": 0,
+      "GJ": 61,
+      "PB": 42,
+      "UP": 0,
+      "OTH": 71
     }
   },
 

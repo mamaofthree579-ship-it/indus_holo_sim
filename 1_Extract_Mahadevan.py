@@ -23,8 +23,6 @@ if not PDF_PATH.exists():
         st.error("Failed to download PDF. Provide it manually.")
         st.text(traceback.format_exc())
         st.stop()
-PAGES_DIR = OUT_ROOT / "pages_png"
-EMBED_DIR = OUT_ROOT / "embedded_images"
 
 st.write("PDF path:", PDF_PATH)
 

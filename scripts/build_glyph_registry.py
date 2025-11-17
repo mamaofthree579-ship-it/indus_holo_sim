@@ -1,8 +1,8 @@
-import json, requests, io
+import json, requests
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
+import xml.etree.ElementTree as ET
 import hashlib, math
-import cairosvg
 
 REGISTRY_PATH = Path("data/glyph_registry.json")
 SVG_DIR = Path("data/glyphs/svg")
@@ -12,17 +12,16 @@ MASK_DIR = Path("data/glyphs/masks")
 for d in [SVG_DIR, PNG_DIR, MASK_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-# -----------------------------------------------------------
-# Placeholder NB → Mahadevan mapping
-# (You can update this as we decode signs)
-# -----------------------------------------------------------
-def nb_to_m(nb_num):
-    return nb_num  # simple placeholder until full mapping provided
+# --------------------------------------------
+# Simple NB→Mahadevan mapping placeholder
+# --------------------------------------------
+def nb_to_m(nb):
+    return nb  # replace when you have true mapping
 
 
-# -----------------------------------------------------------
+# --------------------------------------------
 # Try to download historical SVG
-# -----------------------------------------------------------
+# --------------------------------------------
 def try_download_svg(m_num):
     url = f"https://commons.wikimedia.org/wiki/Special:FilePath/Indus_script_sign_{m_num:03d}.svg"
     resp = requests.get(url)
@@ -34,9 +33,47 @@ def try_download_svg(m_num):
     return None
 
 
-# -----------------------------------------------------------
-# Procedural glyph generator
-# -----------------------------------------------------------
+# --------------------------------------------
+# PURE PYTHON SVG → MASK (simple vector parser)
+# --------------------------------------------
+def svg_to_mask(svg_path, size=512):
+    try:
+        tree = ET.parse(svg_path)
+        root = tree.getroot()
+    except:
+        return None
+
+    # Create blank image
+    mask = Image.new("L", (size, size), 0)
+    draw = ImageDraw.Draw(mask)
+
+    # Parse <path d="...">
+    for elem in root.iter():
+        if "path" in elem.tag:
+            d = elem.attrib.get("d", "")
+            # Only handle simple M/L polygons
+            pts = []
+            tokens = d.replace(",", " ").split()
+
+            i = 0
+            while i < len(tokens):
+                if tokens[i] in ("M", "L"):
+                    x = float(tokens[i+1])
+                    y = float(tokens[i+2])
+                    pts.append((x, y))
+                    i += 3
+                else:
+                    i += 1
+
+            if len(pts) >= 2:
+                draw.line(pts, fill=255, width=20)
+
+    return mask
+
+
+# --------------------------------------------
+# Procedural glyph fallback
+# --------------------------------------------
 def procedural_glyph(nb_code, size=512):
     seed = int(hashlib.sha256(nb_code.encode()).hexdigest(), 16)
     img = Image.new("RGBA", (size, size), (255,255,255,0))
@@ -52,17 +89,15 @@ def procedural_glyph(nb_code, size=512):
         y1 = cy + r1 * math.sin(th)
         x2 = cx + (r1*0.4) * math.cos(th + 0.7)
         y2 = cy + (r1*0.4) * math.sin(th + 0.7)
-        draw.line([x1,y1,x2,y2], fill=(0,0,0,255), width=8)
+        draw.line([x1,y1,x2,y2], fill=(0,0,0,255), width=10)
 
-    # mask
-    gray = img.convert("L")
-    bw = gray.point(lambda p: 255 if p > 20 else 0)
-    return img, bw
+    mask = img.convert("L").point(lambda p: 255 if p > 20 else 0)
+    return img, mask
 
 
-# -----------------------------------------------------------
+# --------------------------------------------
 # Build registry
-# -----------------------------------------------------------
+# --------------------------------------------
 def build_registry(start=1, end=417):
     registry = {}
 
@@ -70,48 +105,44 @@ def build_registry(start=1, end=417):
         nb_code = f"NB{nb:03d}"
         print(f"Processing {nb_code}")
 
-        # Try historical SVG
         m_num = nb_to_m(nb)
         svg_path = try_download_svg(m_num)
 
         if svg_path:
-            # Rasterize SVG into PNG + mask
-            png_bytes = cairosvg.svg2png(url=str(svg_path), output_width=512)
-            png_path = PNG_DIR / f"{nb_code}.png"
-            with open(png_path, "wb") as f:
-                f.write(png_bytes)
+            mask = svg_to_mask(svg_path)
+            if mask:
+                # save PNG for display
+                png_path = PNG_DIR / f"{nb_code}.png"
+                mask_path = MASK_DIR / f"{nb_code}_mask.png"
 
-            img = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
-            mask = img.convert("L").point(lambda p: 255 if p > 20 else 0)
-            mask_path = MASK_DIR / f"{nb_code}_mask.png"
-            mask.save(mask_path)
+                mask_img = mask.convert("RGBA")
+                mask_img.save(png_path)
+                mask.save(mask_path)
 
-            registry[nb_code] = {
-                "glyph_type": "historical",
-                "svg_path": str(svg_path),
-                "png_path": str(png_path),
-                "mask_path": str(mask_path)
-            }
+                registry[nb_code] = {
+                    "glyph_type": "historical",
+                    "svg_path": str(svg_path),
+                    "png_path": str(png_path),
+                    "mask_path": str(mask_path)
+                }
+                continue
 
-        else:
-            # Fallback to procedural generator
-            img, mask = procedural_glyph(nb_code)
-            png_path = PNG_DIR / f"{nb_code}.png"
-            mask_path = MASK_DIR / f"{nb_code}_mask.png"
+        # procedural fallback
+        img, mask = procedural_glyph(nb_code)
+        png_path = PNG_DIR / f"{nb_code}.png"
+        mask_path = MASK_DIR / f"{nb_code}_mask.png"
+        img.save(png_path)
+        mask.save(mask_path)
 
-            img.save(png_path)
-            mask.save(mask_path)
+        registry[nb_code] = {
+            "glyph_type": "procedural",
+            "svg_path": None,
+            "png_path": str(png_path),
+            "mask_path": str(mask_path)
+        }
 
-            registry[nb_code] = {
-                "glyph_type": "procedural",
-                "svg_path": None,
-                "png_path": str(png_path),
-                "mask_path": str(mask_path)
-            }
-
-    # Save registry
     REGISTRY_PATH.write_text(json.dumps(registry, indent=2))
-    print("Registry complete.")
+    print("Registry built successfully.")
 
 
 if __name__ == "__main__":

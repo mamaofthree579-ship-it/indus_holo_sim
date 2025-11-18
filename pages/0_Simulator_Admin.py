@@ -23,13 +23,6 @@ BACKUP_DIR= DATA_DIR / "backups"
 for d in (DATA_DIR, GLYPH_DIR, MASK_DIR, BACKUP_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
-# ----- NAVIGATION -----
-st.sidebar.markdown("## 🔀 Navigation")
-st.sidebar.page_link("/streamlit_app.py", label="🔮 Main Simulator")
-st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
-st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
-# -----------------------
-
 # ---------- Utility Functions ----------
 def safe_load_json(path):
     if not path.exists():
@@ -81,6 +74,14 @@ def generate_mask_from_image(pil_img, threshold=128, blur_radius=1):
 
 # ---------- Layout ----------
 st.title("Indus Holo — Registry & Normalization Admin")
+
+
+# ----- NAVIGATION -----
+st.sidebar.markdown("## 🔀 Navigation")
+st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
+st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
+st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
+# -----------------------
 
 tab = st.tabs(["Registry Editor", "Batch Normalize & Mask", "Upload & Normalize (one)", "Export to Simulator"])
 

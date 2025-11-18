@@ -11,8 +11,6 @@ import json, io, shutil, datetime
 
 st.set_page_config(layout="wide", page_title="Indus Holo — Admin")
 
-import streamlit as st
-
 # ----- UNIVERSAL NAVIGATION -----
 with st.sidebar:
     st.markdown("## 🔀 Navigation")

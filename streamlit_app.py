@@ -1,78 +1,141 @@
 import streamlit as st
-from simulator.simulator import load_signs_json, create_grid, HoloSimulator, Symbol
-from pathlib import Path
-import os
+import numpy as np
+from PIL import Image, ImageOps
+import io
+import matplotlib.pyplot as plt
 
-st.title("Indus Holographic Simulator — Glyph Stimuli")
+st.title("🔮 Symbol Tester — Light, Acoustic & Holographic Explorer")
+st.write("Upload a symbol image to test holographic, acoustic, and frequency responses.")
 
-# -----------------------------
-# Load database
-# -----------------------------
+# ---------------------------------------------------------
+# File upload
+# ---------------------------------------------------------
+uploaded = st.file_uploader("Upload Symbol Image (PNG/JPG)", 
+                            type=["png", "jpg", "jpeg"])
 
-signs = load_signs_json("data/nb_signs.json")
-nb = st.sidebar.selectbox("Select NB sign", sorted(signs.keys()))
+if not uploaded:
+    st.stop()
 
-# Choose whether to use synthetic or glyph-driven
-mode = st.sidebar.radio("Stimulus", ["synthetic", "glyph"])
-if mode == "glyph":
-    glyph_dir = Path("data/images")
-    glyph_path = glyph_dir / f"{nb}_mask.png"
-    if not glyph_path.exists():
-        st.warning(f"No glyph mask found for {nb}. Run glyph generator to create {glyph_path}.")
-    else:
-        stim_mode = st.sidebar.selectbox("Field type", ["holo","light","acoustic","mask"])
-        symbol = signs[nb]
-        holo = HoloSimulator()
-        fig = holo.compute_field_from_glyph(symbol, str(glyph_path), mode=stim_mode)
-        st.pyplot(fig)
-else:
-    # synthetic
-    symbol = signs[nb]
-    holo = HoloSimulator()
-    grid = create_grid(256)
-    fig = holo.compute_field(symbol, grid)
+# load + normalize to 0–1
+img = Image.open(uploaded).convert("L")
+img = ImageOps.invert(img)  # ink = bright
+img_np = np.array(img) / 255.0
+
+st.subheader("Uploaded Symbol")
+st.image(img, use_column_width=True)
+
+# ---------------------------------------------------------
+# Simulation Controls
+# ---------------------------------------------------------
+
+st.sidebar.title("Simulation Controls")
+
+mode = st.sidebar.radio(
+    "Mode",
+    ["Light FFT (Diffraction)", "Acoustic Harmonics", "Holographic Interference"]
+)
+
+# shared settings
+resize = st.sidebar.slider("Resize Image (px)", 64, 512, 256)
+img_resized = img.resize((resize, resize))
+img_np = np.array(img_resized) / 255.0
+
+
+# ---------------------------------------------------------
+# 1. Light FFT Diffraction Simulation
+# ---------------------------------------------------------
+def simulate_fft(image):
+    fft = np.fft.fftshift(np.fft.fft2(image))
+    magnitude = np.abs(fft)
+    magnitude = magnitude ** 0.4  # perceptual mapping
+    magnitude /= magnitude.max() + 1e-8
+    return magnitude
+
+# ---------------------------------------------------------
+# 2. Acoustic Harmonic Response
+# ---------------------------------------------------------
+def simulate_acoustic(image, base_freq, harmonics):
+    h, w = image.shape
+    y = np.linspace(0, 1, h)
+    x = np.linspace(0, 1, w)
+    xx, yy = np.meshgrid(x, y)
+
+    field = np.zeros_like(image, dtype=float)
+    for k in range(1, harmonics + 1):
+        field += image * np.sin(2 * np.pi * (base_freq * k) * (xx + yy))
+
+    field = np.abs(field)
+    field /= field.max() + 1e-8
+    return field
+
+# ---------------------------------------------------------
+# 3. Holographic Interference (2-beam)
+# ---------------------------------------------------------
+def simulate_hologram(image, wavelength, angle):
+    h, w = image.shape
+    y = np.linspace(0, 1, h)
+    x = np.linspace(0, 1, w)
+    xx, yy = np.meshgrid(x, y)
+
+    carrier = np.cos(2 * np.pi * (xx*np.cos(angle) + yy*np.sin(angle)) / wavelength)
+
+    holo = (image * carrier)
+    holo = holo - holo.min()
+    holo /= holo.max() + 1e-8
+    return holo
+
+# ---------------------------------------------------------
+# Run Simulation
+# ---------------------------------------------------------
+if mode == "Light FFT (Diffraction)":
+    st.header("🔆 Light Diffraction (FFT)")
+    result = simulate_fft(img_np)
+
+    fig, ax = plt.subplots()
+    ax.imshow(result, cmap="inferno")
+    ax.axis("off")
     st.pyplot(fig)
 
 
-# -----------------------------
-# Sidebar selection
-# -----------------------------
-nb_list = sorted(signs.keys())
-selected_nb = st.sidebar.selectbox("Select Sign (NB)", nb_list)
+elif mode == "Acoustic Harmonics":
+    st.header("🔊 Acoustic Harmonic Response")
 
-mode = st.sidebar.selectbox(
-    "Holographic Mode",
-    ["acoustic", "light", "matrix"]
-)
+    base = st.sidebar.slider("Base Frequency", 1, 20, 5)
+    harms = st.sidebar.slider("Harmonics", 1, 20, 5)
 
-symbol = signs[selected_nb]
+    result = simulate_acoustic(img_np, base, harms)
 
-# -----------------------------
-# Display metadata
-# -----------------------------
-st.subheader(f"Metadata for {selected_nb}")
+    fig, ax = plt.subplots()
+    ax.imshow(result, cmap="viridis")
+    ax.axis("off")
+    st.pyplot(fig)
 
-st.json({
-    "icit_id": symbol.icit_id,
-    "class": symbol.sign_class,
-    "set": symbol.set,
-    "frequency": symbol.frequency,
-    "positions": symbol.positions,
-    "sites": symbol.sites,
-})
 
-# -----------------------------
-# Generate holographic matrix
-# -----------------------------
-matrix = symbol.generate_wave_matrix(mode=mode)
-grid = create_grid(matrix)
+elif mode == "Holographic Interference":
+    st.header("🌐 Holographic Interference Pattern")
 
-# -----------------------------
-# Display visualization
-# -----------------------------
-st.subheader("Holographic Waveform")
-st.image(
-    grid,
-    width=400,
-    caption=f"{mode.title()} Mode Waveform for {selected_nb}"
+    wavelength = st.sidebar.slider("Wavelength", 0.01, 0.20, 0.05)
+    angle_deg = st.sidebar.slider("Beam Angle (degrees)", 0, 180, 45)
+    angle = np.deg2rad(angle_deg)
+
+    result = simulate_hologram(img_np, wavelength, angle)
+
+    fig, ax = plt.subplots()
+    ax.imshow(result, cmap="magma")
+    ax.axis("off")
+    st.pyplot(fig)
+
+# ---------------------------------------------------------
+# Download Simulation Output
+# ---------------------------------------------------------
+buf = io.BytesIO()
+out_img = Image.fromarray((result * 255).astype(np.uint8))
+out_img.save(buf, format="PNG")
+buf.seek(0)
+
+st.download_button(
+    "Download Simulation Output",
+    buf,
+    file_name=f"{mode.replace(' ', '_')}.png",
+    mime="image/png"
 )

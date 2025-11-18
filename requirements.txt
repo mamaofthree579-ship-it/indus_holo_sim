@@ -6,4 +6,3 @@ beautifulsoup4
 pillow
 imageio
 scipy
-cairosvg

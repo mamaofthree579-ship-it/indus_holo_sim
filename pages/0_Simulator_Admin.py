@@ -72,16 +72,15 @@ def generate_mask_from_image(pil_img, threshold=128, blur_radius=1):
     mask = Image.fromarray(mask).filter(ImageFilter.MedianFilter(3))
     return mask
 
-# ---------- Layout ----------
-st.title("Indus Holo — Registry & Normalization Admin")
-
-
 # ----- NAVIGATION -----
 st.sidebar.markdown("## 🔀 Navigation")
 st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
 st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
 st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
 # -----------------------
+
+# ---------- Layout ----------
+st.title("Indus Holo — Registry & Normalization Admin")
 
 tab = st.tabs(["Registry Editor", "Batch Normalize & Mask", "Upload & Normalize (one)", "Export to Simulator"])
 

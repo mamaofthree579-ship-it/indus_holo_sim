@@ -11,8 +11,8 @@ import json, io, shutil, datetime
 
 # ----- NAVIGATION -----
 st.sidebar.markdown("## 🔀 Navigation")
-st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
 st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
+st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
 st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
 # -----------------------
 

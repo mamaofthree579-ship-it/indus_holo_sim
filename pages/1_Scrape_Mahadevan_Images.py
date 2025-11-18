@@ -7,7 +7,7 @@ st.title("View Mahadevan Page Images (No Saving Required)")
 
 # Archive.org IIIF page image pattern
 BASE_URL = (
-    "https://iiif.archivelab.org/iiif/"
+    "https://archivelab.org/"
     "TheIndusScript.TextConcordanceAndTablesIravathanMahadevan/"
     "p{page}/full/full/0/default.jpg"
 )

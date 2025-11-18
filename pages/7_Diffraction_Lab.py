@@ -197,10 +197,6 @@ def add_contrast_fade(image, factor=0.7):
 # ---------------------------
 # UI: Inputs
 # ---------------------------
-st.sidebar.markdown("## 🔀 Navigation")
-st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
-st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
-st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
 st.sidebar.header("Inputs & Options")
 uploads = st.sidebar.file_uploader("Upload 1 symbol (PNG/JPG)", type=['png','jpg','jpeg'])
 size = st.sidebar.slider("Processing size (px)", 64, 512, 256)

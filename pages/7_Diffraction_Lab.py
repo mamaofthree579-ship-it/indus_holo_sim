@@ -15,12 +15,6 @@ from PIL import Image, ImageOps, ImageFilter
 import io, zipfile, math
 import matplotlib.pyplot as plt
 
-# ----- NAVIGATION -----
-st.sidebar.markdown("## 🔀 Navigation")
-st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
-st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
-st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
-# -----------------------
 
 st.set_page_config(layout="wide", page_title="Diffraction Physics — Advanced")
 st.title("Diffraction Physics — Advanced Toolkit")
@@ -199,6 +193,13 @@ def add_surface_scatter(image, roughness=0.1):
 def add_contrast_fade(image, factor=0.7):
     out = image * factor + (1-factor)*0.5
     return (out - out.min())/(out.max()-out.min()+1e-12)
+
+# ----- NAVIGATION -----
+st.sidebar.markdown("## 🔀 Navigation")
+st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
+st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
+st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
+# -----------------------
 
 # ---------------------------
 # UI: Inputs

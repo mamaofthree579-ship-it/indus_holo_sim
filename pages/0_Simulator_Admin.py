@@ -11,12 +11,6 @@ import json, io, shutil, datetime
 
 st.set_page_config(layout="wide", page_title="Indus Holo — Admin")
 
-# ----- NAVIGATION -----
-st.sidebar.markdown("## 🔀 Navigation")
-st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
-st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
-st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
-# -----------------------
 
 # ---------- Paths ----------
 ROOT = Path(__file__).resolve().parent
@@ -28,6 +22,13 @@ BACKUP_DIR= DATA_DIR / "backups"
 
 for d in (DATA_DIR, GLYPH_DIR, MASK_DIR, BACKUP_DIR):
     d.mkdir(parents=True, exist_ok=True)
+
+# ----- NAVIGATION -----
+st.sidebar.markdown("## 🔀 Navigation")
+st.sidebar.page_link("streamlit_app.py", label="🔮 Main Simulator")
+st.sidebar.page_link("pages/0_Simulator_Admin.py", label="⚙️ Admin / Normalization")
+st.sidebar.page_link("pages/7_Diffraction_Lab.py", label="🌈 Diffraction Physics Lab")
+# -----------------------
 
 # ---------- Utility Functions ----------
 def safe_load_json(path):

@@ -7,3 +7,4 @@ pillow
 imageio
 scipy
 opencv-python
+scikit-image

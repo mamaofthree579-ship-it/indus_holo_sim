@@ -21,7 +21,7 @@ max_contour_area = st.sidebar.slider("Max Symbol Area", 1000, 20000, 10000)
 
 st.sidebar.subheader("Shape Filtering")
 min_solidity = st.sidebar.slider("Minimum Solidity (0.0 to 1.0)", 0.0, 1.0, 0.35, 0.05)
-st.sidebar.markdown("_High values (e.g., > 0.8) keep only solid, filled-in shapes. Low values (< 0.2) allow thin, scratch-like shapes. Adjust this to filter out noise._")
+st.sidebar.markdown("_High values (> 0.8) keep solid shapes. Low values (< 0.2) allow scratch-like shapes. Adjust this to filter out noise._")
 
 uploaded_file = st.file_uploader("Choose your image file", type=["jpg", "jpeg", "png"])
 
@@ -35,22 +35,21 @@ if uploaded_file is not None:
     if st.button(f"Run Full Intelligent Analysis"):
         with st.spinner("Applying intelligent filters and running full analysis..."):
             # --- PHASE 1: Intelligent Detection ---
-            img_color = Image.open(uploaded_file).convert("RGB")
-            cv_img_gray = np.array(img_color.convert('L'))
+            pil_img = Image.open(uploaded_file).convert("RGB")
+            cv_img_gray = np.array(pil_img.convert('L'))
             
-            # Use a blur to help smooth noise before detection
+            # --- FIX: Convert PIL image to OpenCV format for drawing ---
+            img_to_draw_on = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
             blurred = cv2.GaussianBlur(cv_img_gray, (5, 5), 0)
-            
             edges = cv2.Canny(blurred, canny_thresh1, canny_thresh2)
             contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             
             valid_symbols = []
-            img_with_contours = img_color.copy() # For visualization
 
             for contour in contours:
                 area = cv2.contourArea(contour)
                 
-                # --- NEW SHAPE FILTERING LOGIC ---
                 if area > 0:
                     hull = cv2.convexHull(contour)
                     hull_area = cv2.contourArea(hull)
@@ -60,9 +59,6 @@ if uploaded_file is not None:
 
                 if min_contour_area < area < max_contour_area and solidity > min_solidity:
                     x, y, w, h = cv2.boundingRect(contour)
-                    
-                    # Additional filter for aspect ratio can be added here if needed
-                    # if w > 5 and h > 5:
                     
                     moments = cv2.moments(contour)
                     hu_moments = cv2.HuMoments(moments)
@@ -74,13 +70,15 @@ if uploaded_file is not None:
                         "x": x, "y": y
                     })
                     # Draw a green box around accepted glyphs
-                    cv2.rectangle(img_with_contours, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    cv2.rectangle(img_to_draw_on, (x, y), (x+w, y+h), (0, 255, 0), 2)
             
-            st.session_state.img_with_contours = img_with_contours
+            # --- FIX: Convert back to RGB for displaying in Streamlit ---
+            st.session_state.img_with_contours = cv2.cvtColor(img_to_draw_on, cv2.COLOR_BGR2RGB)
             st.session_state.detected_count = len(valid_symbols)
 
             if len(valid_symbols) < selected_k:
                 st.error(f"Analysis failed: Only {len(valid_symbols)} valid glyphs were detected, which is fewer than the requested {selected_k} clusters. Please adjust your filter settings (especially try lowering 'Minimum Solidity') and try again.")
+                st.session_state.analysis_complete = False
             else:
                 # --- PHASES 2-8 ---
                 feature_vectors = np.array([s['vector'] for s in valid_symbols])
@@ -109,7 +107,6 @@ if st.session_state.analysis_complete:
     st.image(st.session_state.img_with_contours, caption="Green boxes show what was analyzed.")
     st.write("---")
 
-    # --- Phase 7 & 8 ---
     st.header("Core Vocabulary & Interpretation")
     glyph_dictionary = {s['cluster']: s['patch'] for s in reversed(st.session_state.valid_symbols)}
 
@@ -122,7 +119,6 @@ if st.session_state.analysis_complete:
             with cols[i]:
                 st.image(glyph_dictionary.get(glyph_id, Image.new('L', (50,50))), caption=f"ID: {glyph_id}", width=100)
 
-    # Check if any patterns were found
     if st.session_state.bigrams:
         top_bigram, bigram_count = st.session_state.bigrams.most_common(1)[0]
         display_sequence("Most Common Bigram (2-Glyph Word)", top_bigram, bigram_count)

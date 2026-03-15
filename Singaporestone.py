@@ -2,9 +2,12 @@ import streamlit as st
 from PIL import Image, ImageDraw
 import numpy as np
 import cv2
+import pandas as pd
 
-st.title("Phase 1: Inscription Symbol Extraction")
-st.write("Upload an image of an artifact to detect and isolate potential symbols or glyphs.")
+st.set_page_config(layout="wide") # Use a wider layout for better display
+
+st.title("Phases 1 & 2: Symbol Extraction and Vectorization")
+st.write("Upload an image to detect symbols (Phase 1) and convert them into numerical feature vectors (Phase 2).")
 
 # --- Sidebar for tunable parameters ---
 st.sidebar.header("Tuning Parameters")
@@ -20,45 +23,62 @@ max_contour_area = st.sidebar.slider("Max Symbol Area", min_value=1000, max_valu
 uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # --- Load Image ---
     try:
         img_color = Image.open(uploaded_file).convert("RGB")
-        st.image(img_color, caption="Original Uploaded Image", use_column_width=True)
-        st.write("---")
-        st.header("Analysis Results")
         
-        # --- Phase 1 Processing ---
-        
-        # 1. Convert to Grayscale
+        col1, col2 = st.columns(2)
+        with col1:
+            st.header("Original Image")
+            st.image(img_color, use_column_width=True)
+            
+        # --- PHASE 1: IMAGE SYMBOL EXTRACTION ---
         cv_img_gray = np.array(img_color.convert('L'))
-
-        # 2. Reduce Noise (Gaussian Blur)
         blurred = cv2.GaussianBlur(cv_img_gray, (blur_radius, blur_radius), 0)
-
-        # 3. Detect Edges (Canny)
         edges = cv2.Canny(blurred, canny_thresh1, canny_thresh2)
-
-        # 4. Identify Contours
         contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 5. Filter and Draw Bounding Boxes
         img_with_boxes = img_color.copy()
         draw = ImageDraw.Draw(img_with_boxes)
-        symbol_count = 0
-
+        
+        valid_contours = []
         for c in contours:
             area = cv2.contourArea(c)
             x, y, w, h = cv2.boundingRect(c)
-            
-            # Filter contours based on area and simple aspect ratio to remove noise
             if min_contour_area < area < max_contour_area and w < 200 and h < 200:
+                valid_contours.append(c)
                 draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
-                symbol_count += 1
         
-        # --- Display Results ---
-        st.image(img_with_boxes, caption=f"Detected Symbols: {symbol_count}", use_column_width=True)
-        st.success(f"Phase 1 Complete: Identified {symbol_count} potential symbols.")
-        st.info("The red boxes highlight the detected symbols based on the current parameters. Adjust the sliders in the sidebar to improve detection.")
+        symbol_count = len(valid_contours)
+        
+        with col2:
+            st.header("Phase 1: Symbol Detection")
+            st.image(img_with_boxes, use_column_width=True)
+            st.success(f"Identified {symbol_count} potential symbols.")
+        
+        st.write("---")
+
+        # --- PHASE 2: SYMBOL VECTORIZATION ---
+        st.header("Phase 2: Symbol Vectorization Results")
+        if symbol_count > 0:
+            feature_vectors = []
+            for contour in valid_contours:
+                # Calculate moments for each contour
+                moments = cv2.moments(contour)
+                # Calculate Hu Moments from the moments
+                hu_moments = cv2.HuMoments(moments)
+                # Log transform Hu Moments to make them more stable for clustering
+                # This is a standard practice as the raw values can vary by many orders of magnitude
+                log_transformed_hu = -1 * np.sign(hu_moments) * np.log10(np.abs(hu_moments))
+                # Flatten the array to a simple list for our dataset
+                feature_vectors.append(log_transformed_hu.flatten())
+
+            # Display the results in a DataFrame
+            df_vectors = pd.DataFrame(feature_vectors, columns=[f"Hu_{i+1}" for i in range(7)])
+            st.success(f"Successfully generated {len(df_vectors)} feature vectors.")
+            st.write("Each row represents a symbol, and each column is a geometric feature (a Hu Moment).")
+            st.dataframe(df_vectors)
+        else:
+            st.warning("No symbols were detected in Phase 1, so no vectors could be generated.")
 
     except Exception as e:
         st.error(f"An error occurred during processing: {e}")

@@ -9,3 +9,4 @@ scipy
 opencv-python
 scikit-image
 opencv-python-headless 
+pandas

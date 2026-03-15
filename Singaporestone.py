@@ -5,11 +5,12 @@ import cv2
 import pandas as pd
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(layout="wide")
 
-st.title("Phases 1-4: Full Inscription Analysis")
-st.write("Detect symbols, vectorize them, group them into families, and construct the final reading sequence.")
+st.title("Phases 1-5: Full Inscription Analysis")
+st.write("Detect, vectorize, group, sequence, and analyze the grammar of symbols from an inscription.")
 
 # --- Sidebar ---
 st.sidebar.header("Tuning Parameters (Phase 1)")
@@ -21,112 +22,88 @@ max_contour_area = st.sidebar.slider("Max Symbol Area", 1000, 20000, 10000)
 
 uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
 
-if 'phase_4_complete' not in st.session_state:
-    st.session_state.phase_4_complete = False
+# Use session state to hold data between button clicks
+if 'analysis_complete' not in st.session_state:
+    st.session_state.analysis_complete = False
 
 if uploaded_file is not None:
-    try:
-        # --- PHASE 1 & 2 ---
-        img_color = Image.open(uploaded_file).convert("RGB")
-        cv_img_gray = np.array(img_color.convert('L'))
-        blurred = cv2.GaussianBlur(cv_img_gray, (blur_radius, blur_radius), 0)
-        edges = cv2.Canny(blurred, canny_thresh1, canny_thresh2)
-        contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # --- Run Analysis Button ---
+    st.header("Run Full Analysis")
+    selected_k = st.slider("Select the number of clusters (k) for Phase 3:", 10, 70, 30)
+    
+    if st.button(f"Run Full Analysis (Phases 1-5)"):
+        with st.spinner("Performing full analysis... This may take a few moments."):
+            # --- PHASES 1 & 2 ---
+            img_color = Image.open(uploaded_file).convert("RGB")
+            cv_img_gray = np.array(img_color.convert('L'))
+            blurred = cv2.GaussianBlur(cv_img_gray, (blur_radius, blur_radius), 0)
+            edges = cv2.Canny(blurred, canny_thresh1, canny_thresh2)
+            contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        img_with_boxes = img_color.copy()
-        draw = ImageDraw.Draw(img_with_boxes)
-        
-        valid_symbols = []
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            x, y, w, h = cv2.boundingRect(contour)
-            if min_contour_area < area < max_contour_area and w < 200 and h < 200:
-                moments = cv2.moments(contour)
-                hu_moments = cv2.HuMoments(moments)
-                log_transformed_hu = -1 * np.sign(hu_moments) * np.log10(np.abs(hu_moments))
-                
-                valid_symbols.append({
-                    "patch": cv_img_gray[y:y+h, x:x+w],
-                    "vector": log_transformed_hu.flatten(),
-                    "x": x, "y": y
-                })
-                draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
-        
-        symbol_count = len(valid_symbols)
-        st.header("Phase 1 & 2 Results")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(img_with_boxes, caption=f"Phase 1: Detected {symbol_count} symbols", use_column_width=True)
-        with col2:
-            if symbol_count > 0:
-                st.write(f"Phase 2: Generated {symbol_count} feature vectors.")
-        st.write("---")
-
-        # --- PHASE 3 ---
-        st.header("Phase 3: Symbol Classification")
-        if symbol_count > 10:
+            valid_symbols = []
+            for contour in contours:
+                area = cv2.contourArea(contour)
+                x, y, w, h = cv2.boundingRect(contour)
+                if min_contour_area < area < max_contour_area and w < 200 and h < 200:
+                    moments = cv2.moments(contour)
+                    hu_moments = cv2.HuMoments(moments)
+                    log_transformed_hu = -1 * np.sign(hu_moments) * np.log10(np.abs(hu_moments))
+                    
+                    valid_symbols.append({
+                        "vector": log_transformed_hu.flatten(), "x": x, "y": y
+                    })
+            
+            st.session_state.symbol_count = len(valid_symbols)
             feature_vectors = np.array([s['vector'] for s in valid_symbols])
             
-            with st.expander("Click to see Elbow Plot for choosing 'k'"):
-                k_range = range(10, 71, 5)
-                inertias = [KMeans(n_clusters=k, random_state=42, n_init='auto').fit(feature_vectors).inertia_ for k in k_range]
-                fig, ax = plt.subplots()
-                ax.plot(k_range, inertias, marker='o')
-                ax.set_xlabel("Number of clusters (k)")
-                ax.set_ylabel("Inertia")
-                ax.set_title("Elbow Method for Optimal k")
-                st.pyplot(fig)
+            # --- PHASE 3 ---
+            kmeans = KMeans(n_clusters=selected_k, random_state=42, n_init='auto').fit(feature_vectors)
+            labels = kmeans.labels_
+            for i, symbol in enumerate(valid_symbols):
+                symbol['cluster'] = labels[i]
+            
+            # --- PHASE 4 ---
+            valid_symbols.sort(key=lambda s: (s['y'] // 20, s['x']))
+            final_sequence = [s['cluster'] for s in valid_symbols]
+            
+            # --- PHASE 5 ---
+            num_clusters = selected_k
+            transition_matrix = np.zeros((num_clusters, num_clusters))
+            for i in range(len(final_sequence) - 1):
+                from_state = final_sequence[i]
+                to_state = final_sequence[i+1]
+                transition_matrix[from_state, to_state] += 1
+            
+            # Normalize to get probabilities
+            row_sums = transition_matrix.sum(axis=1, keepdims=True)
+            # Avoid division by zero for states that are only at the end of a line
+            prob_matrix = np.divide(transition_matrix, row_sums, out=np.zeros_like(transition_matrix), where=row_sums!=0)
+            
+            # Store results in session state
+            st.session_state.prob_matrix = prob_matrix
+            st.session_state.final_sequence_str = ' '.join(map(str, final_sequence))
+            st.session_state.analysis_complete = True
+            st.session_state.selected_k = selected_k
 
-            selected_k = st.slider("Select the number of clusters (k):", 10, 70, 30)
-            
-            if st.button(f"Group Symbols and Construct Sequence"):
-                st.session_state.phase_4_complete = True
-                kmeans = KMeans(n_clusters=selected_k, random_state=42, n_init='auto').fit(feature_vectors)
-                labels = kmeans.labels_
-                for i, symbol in enumerate(valid_symbols):
-                    symbol['cluster'] = labels[i]
-                
-                st.session_state.valid_symbols = valid_symbols
-                st.session_state.selected_k = selected_k
+if st.session_state.analysis_complete:
+    st.success("Full analysis is complete!")
+    st.write("---")
 
-        if st.session_state.phase_4_complete:
-            # --- PHASE 4: SEQUENCE CONSTRUCTION ---
-            st.write("---")
-            st.header("Phase 4: Sequence Construction")
-            
-            with st.spinner("Sorting symbols into reading order..."):
-                symbols_to_sort = st.session_state.valid_symbols
-                
-                # Sort primarily by 'y' coordinate, then by 'x'
-                # A more robust line-finding algorithm can be complex, but this is a strong start
-                symbols_to_sort.sort(key=lambda s: (s['y'] // 20, s['x'])) # Group by y-lines of 20px height
-                
-                final_sequence = [s['cluster'] for s in symbols_to_sort]
-                
-                st.success("Successfully constructed the symbol sequence!")
-                st.write("This is the 'digital transcript' of the inscription, where each number represents a glyph family:")
-                
-                # Display the sequence as a string of numbers
-                sequence_str = ' '.join(map(str, final_sequence))
-                st.code(sequence_str, language=None)
-                
-                # Visualize the first part of the sequence
-                st.subheader("Visual Transcript (first 50 symbols)")
-                
-                # Create a mapping from cluster ID to a sample image
-                cluster_to_patch = {i: None for i in range(st.session_state.selected_k)}
-                for s in symbols_to_sort:
-                    if cluster_to_patch[s['cluster']] is None:
-                        cluster_to_patch[s['cluster']] = s['patch']
-                
-                # Display images in order
-                cols = st.columns(10)
-                for i in range(min(50, len(final_sequence))):
-                    cluster_id = final_sequence[i]
-                    patch = cluster_to_patch.get(cluster_id)
-                    if patch is not None:
-                        with cols[i % 10]:
-                            st.image(patch, width=40, caption=f"ID:{cluster_id}")
-            
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+    # --- Display Phase 4 Results ---
+    st.header("Phase 4: Constructed Sequence")
+    st.write(f"Found {st.session_state.symbol_count} symbols and constructed the digital transcript below:")
+    st.code(st.session_state.final_sequence_str, language=None)
+    st.write("---")
+
+    # --- Display Phase 5 Results ---
+    st.header("Phase 5: Grammar Discovery")
+    st.write("The heatmap below shows the probability of one symbol following another. Bright squares indicate a high-probability pair, representing a likely grammatical or lexical rule.")
+    
+    fig, ax = plt.subplots(figsize=(12, 10))
+    sns.heatmap(st.session_state.prob_matrix, ax=ax, cmap="viridis")
+    ax.set_title("Symbol Transition Probability Matrix")
+    ax.set_xlabel("To Symbol (Cluster ID)")
+    ax.set_ylabel("From Symbol (Cluster ID)")
+    st.pyplot(fig)
+    
+    st.info("By examining the bright squares (e.g., from row 10 to column 25), you can identify the fundamental 'syllables' of the inscription's language.")

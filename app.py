@@ -1,94 +1,194 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from sklearn.decomposition import PCA
 import time
-import sys
-import os
-import src.vector_plot as vp
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# Clear cache to force updates
-st.cache_data.clear()
-
-# Imports
-from modules.analytics import (
-    generate_sample_data,
-    compute_resonance_matrix,
-    find_resonant_clusters,
-    compute_symbol_energy,
-    compute_energy_flow,
-    evolve_matrix_step
-)
-
-from src.vector_plot import (
-    render_3d_resonance_field,
-    render_energy_flow_field,
-    render_frequency_spectrum
-)
 
 # ------------------------------------------------------------------------------
 # CONFIG
 # ------------------------------------------------------------------------------
 st.set_page_config(layout="wide")
-st.title("🌀 IVC Symbolic Energy System (Global Synchrony Mode)")
+st.title("🌀 IVC Symbolic Energy System — Unified Field Mode")
 
 # ------------------------------------------------------------------------------
-# CONTROLS
+# SIDEBAR
 # ------------------------------------------------------------------------------
 st.sidebar.header("Controls")
 
-num_symbols = st.sidebar.slider("Symbols", 3, 15, 6)
+num_symbols = st.sidebar.slider("Symbols", 3, 12, 6)
 threshold = st.sidebar.slider("Cluster Threshold", 0.5, 0.95, 0.8)
-
-run_animation = st.sidebar.toggle("▶️ Run Global Synchrony", value=False)
+run_animation = st.sidebar.toggle("▶️ Run Global Synchrony", False)
 speed = st.sidebar.slider("Speed", 0.01, 0.2, 0.05)
+field_mode = st.sidebar.toggle("🌊 Field Mode", True)
 
 # ------------------------------------------------------------------------------
-# INITIAL DATA
+# DATA GENERATION
+# ------------------------------------------------------------------------------
+def generate_data(n):
+    np.random.seed(42)
+    symbols = [f"S{i}" for i in range(n)]
+    values = np.random.rand(n, n)
+    return pd.DataFrame(values, index=symbols, columns=symbols)
+
+def compute_resonance(df):
+    data = df.to_numpy()
+    norm = np.linalg.norm(data, axis=1, keepdims=True)
+    normalized = data / (norm + 1e-9)
+    res = np.dot(normalized, normalized.T)
+    return pd.DataFrame(res, index=df.index, columns=df.columns)
+
+# ------------------------------------------------------------------------------
+# CLUSTERING
+# ------------------------------------------------------------------------------
+def find_clusters(matrix, threshold):
+    clusters = []
+    visited = set()
+    labels = matrix.index.tolist()
+
+    for i in range(len(labels)):
+        if i in visited:
+            continue
+
+        cluster = {labels[i]}
+        for j in range(len(labels)):
+            if i != j and matrix.iloc[i, j] >= threshold:
+                cluster.add(labels[j])
+
+        visited.update([labels.index(c) for c in cluster])
+        clusters.append(cluster)
+
+    return clusters
+
+# ------------------------------------------------------------------------------
+# ENERGY + FLOW
+# ------------------------------------------------------------------------------
+def compute_energy(matrix):
+    return {s: float(v) for s, v in matrix.sum(axis=1).items()}
+
+def compute_flow(matrix):
+    data = matrix.to_numpy()
+    grad = np.gradient(data)
+    flow = grad[0] + grad[1]
+    v = np.mean(flow, axis=1)
+    return np.stack([v, v, v], axis=1)
+
+# ------------------------------------------------------------------------------
+# EVOLUTION
+# ------------------------------------------------------------------------------
+def evolve(matrix, t=0.05):
+    M = matrix.to_numpy()
+    phase = np.sin(np.linspace(0, 2*np.pi, M.shape[0]))[:, None]
+    evolved = M + t * (np.dot(M, M.T) * phase)
+    evolved = np.clip(evolved, 0, 1)
+    return pd.DataFrame(evolved, index=matrix.index, columns=matrix.columns)
+
+# ------------------------------------------------------------------------------
+# VISUALS
+# ------------------------------------------------------------------------------
+def render_resonance(matrix, clusters):
+    coords = PCA(n_components=3).fit_transform(matrix.values)
+    labels = matrix.index.tolist()
+    fig = go.Figure()
+
+    for cluster in clusters:
+        idx = [labels.index(s) for s in cluster]
+        fig.add_trace(go.Scatter3d(
+            x=coords[idx,0], y=coords[idx,1], z=coords[idx,2],
+            mode="markers+text",
+            text=[labels[i] for i in idx],
+            marker=dict(size=6),
+            name=str(cluster)
+        ))
+    fig.update_layout(title="3D Resonance Field", height=500)
+    return fig
+
+def render_flow(matrix, flow):
+    coords = PCA(n_components=3).fit_transform(matrix.values)
+    fig = go.Figure(data=go.Cone(
+        x=coords[:,0], y=coords[:,1], z=coords[:,2],
+        u=flow[:,0], v=flow[:,1], w=flow[:,2],
+        sizeref=2
+    ))
+    fig.update_layout(title="Energy Flow Field", height=500)
+    return fig
+
+def render_frequency(energy, t):
+    symbols = list(energy.keys())
+    vals = np.array(list(energy.values()))
+    freqs = np.linspace(0.1, 2.0, len(vals))
+
+    fig = go.Figure()
+
+    for i in range(len(symbols)):
+        amp = vals[i] * (1 + 0.3*np.sin(t + freqs[i]))
+        z = amp * np.sin(freqs[i]*np.pi + t)
+
+        fig.add_trace(go.Scatter3d(
+            x=[freqs[i], freqs[i]],
+            y=[0, amp],
+            z=[0, z],
+            mode="lines",
+            name=symbols[i]
+        ))
+
+    fig.update_layout(title="Frequency Spectrum", height=500)
+    return fig
+
+def render_field(matrix, t):
+    coords = PCA(n_components=2).fit_transform(matrix.values)
+
+    x = np.linspace(-2,2,50)
+    y = np.linspace(-2,2,50)
+    X,Y = np.meshgrid(x,y)
+    Z = np.zeros_like(X)
+
+    for i,(sx,sy) in enumerate(coords):
+        energy = np.sum(matrix.iloc[i])
+        dist = np.sqrt((X-sx)**2 + (Y-sy)**2)
+        Z += energy * np.sin(5*dist - t)
+
+    Z /= np.max(np.abs(Z)) + 1e-9
+
+    fig = go.Figure(data=go.Surface(x=X,y=Y,z=Z))
+    fig.update_layout(title="🌊 Energy Field", height=600)
+    return fig
+
+# ------------------------------------------------------------------------------
+# STATE
 # ------------------------------------------------------------------------------
 if "matrix" not in st.session_state:
-    data = generate_sample_data(num_symbols)
-    matrix = compute_resonance_matrix(data)
-    st.session_state.matrix = matrix
+    data = generate_data(num_symbols)
+    st.session_state.matrix = compute_resonance(data)
 
 # ------------------------------------------------------------------------------
-# PLACEHOLDERS (important for live updates)
+# LAYOUT
 # ------------------------------------------------------------------------------
 col1, col2 = st.columns(2)
-col3 = st.container()
-
-res_placeholder = col1.empty()
-flow_placeholder = col2.empty()
-freq_placeholder = col3.empty()
+field_area = st.container()
 
 # ------------------------------------------------------------------------------
-# GLOBAL SYNCHRONY LOOP
+# RENDER
 # ------------------------------------------------------------------------------
-def render_all(matrix):
-    clusters = find_resonant_clusters(matrix, threshold=threshold)
-    energy_map = compute_symbol_energy(matrix)
-    flow_vectors = compute_energy_flow(matrix)
+def render_all(matrix, t):
+    clusters = find_clusters(matrix, threshold)
+    energy = compute_energy(matrix)
+    flow = compute_flow(matrix)
 
-    fig_res = render_3d_resonance_field(matrix, clusters)
-    fig_flow = render_energy_flow_field(matrix, flow_vectors)
-    fig_freq = render_frequency_spectrum(energy_map)
+    col1.plotly_chart(render_resonance(matrix, clusters), use_container_width=True)
+    col2.plotly_chart(render_flow(matrix, flow), use_container_width=True)
+    col1.plotly_chart(render_frequency(energy, t), use_container_width=True)
 
-    res_placeholder.plotly_chart(fig_res, use_container_width=True, key="res")
-    flow_placeholder.plotly_chart(fig_flow, use_container_width=True, key="flow")
-    freq_placeholder.plotly_chart(fig_freq, use_container_width=True, key="freq")
-
+    if field_mode:
+        field_area.plotly_chart(render_field(matrix, t), use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# RUN MODE
+# RUN LOOP
 # ------------------------------------------------------------------------------
 if run_animation:
-    for _ in range(50):  # number of cycles
-        st.session_state.matrix = evolve_matrix_step(st.session_state.matrix)
-
-        render_all(st.session_state.matrix)
-
+    for step in range(60):
+        st.session_state.matrix = evolve(st.session_state.matrix)
+        render_all(st.session_state.matrix, step * 0.2)
         time.sleep(speed)
-
-    st.sidebar.success("Cycle complete")
 else:
-    render_all(st.session_state.matrix)
-st.write("Loaded:", dir(vp))
+    render_all(st.session_state.matrix, 0)

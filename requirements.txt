@@ -12,3 +12,4 @@ opencv-python-headless
 pandas
 scikit-learn 
 seaborn
+plotly

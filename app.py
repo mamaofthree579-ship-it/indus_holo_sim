@@ -76,6 +76,53 @@ def coherence_label(ci):
         return "🌑 LOW COHERENCE"
 
 # ------------------------------------------------------------------------------
+# TEMPORAL TRACKING
+# ------------------------------------------------------------------------------
+if "coherence_history" not in st.session_state:
+    st.session_state.coherence_history = []
+
+if "time_steps" not in st.session_state:
+    st.session_state.time_steps = []
+
+def detect_events(history, threshold=0.08):
+    events = []
+    for i in range(1, len(history)):
+        delta = history[i] - history[i-1]
+        if delta > threshold:
+            events.append((i, history[i], delta))
+    return events
+
+def render_coherence_graph(time_steps, history):
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=time_steps,
+        y=history,
+        mode='lines+markers',
+        name="Coherence Index"
+    ))
+
+    events = detect_events(history)
+
+    if events:
+        fig.add_trace(go.Scatter(
+            x=[e[0] for e in events],
+            y=[e[1] for e in events],
+            mode='markers',
+            marker=dict(size=10, symbol="x"),
+            name="Events"
+        ))
+
+    fig.update_layout(
+        title="⏱️ Temporal Coherence Evolution",
+        xaxis_title="Time Step",
+        yaxis_title="Coherence Index",
+        height=400
+    )
+
+    return fig
+
+# ------------------------------------------------------------------------------
 # CLUSTERING
 # ------------------------------------------------------------------------------
 def find_clusters(matrix, threshold):
@@ -124,16 +171,19 @@ def render_resonance(matrix, clusters):
             marker=dict(size=6),
             name=str(cluster)
         ))
+
     fig.update_layout(title="3D Resonance Field", height=500)
     return fig
 
 def render_flow(matrix, flow):
     coords = PCA(n_components=3).fit_transform(matrix.values)
+
     fig = go.Figure(data=go.Cone(
         x=coords[:,0], y=coords[:,1], z=coords[:,2],
         u=flow[:,0], v=flow[:,1], w=flow[:,2],
         sizeref=2
     ))
+
     fig.update_layout(title="Energy Flow Field", height=500)
     return fig
 
@@ -194,18 +244,36 @@ def render_all(matrix, t):
     clusters = find_clusters(matrix, threshold)
     energy = compute_energy(matrix)
     flow = compute_flow(matrix)
-
     ci = compute_coherence(matrix)
 
+    # Store temporal data
+    st.session_state.coherence_history.append(ci)
+    st.session_state.time_steps.append(len(st.session_state.coherence_history))
+
+    if len(st.session_state.coherence_history) > 200:
+        st.session_state.coherence_history.pop(0)
+        st.session_state.time_steps.pop(0)
+
+    # Metrics
     col1.metric("Coherence Index", f"{ci:.3f}")
     col2.metric("State", coherence_label(ci))
 
+    # Visuals
     col1.plotly_chart(render_resonance(matrix, clusters), use_container_width=True, key=f"res_{t}")
     col2.plotly_chart(render_flow(matrix, flow), use_container_width=True, key=f"flow_{t}")
     col3.plotly_chart(render_frequency(energy, t), use_container_width=True, key=f"freq_{t}")
 
     if field_mode:
         field_area.plotly_chart(render_field(matrix, t), use_container_width=True, key=f"field_{t}")
+
+    # Coherence timeline
+    st.plotly_chart(
+        render_coherence_graph(
+            st.session_state.time_steps,
+            st.session_state.coherence_history
+        ),
+        use_container_width=True
+    )
 
 # ------------------------------------------------------------------------------
 # LOOP

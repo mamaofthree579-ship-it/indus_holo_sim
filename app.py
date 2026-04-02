@@ -3,7 +3,9 @@ import numpy as np
 import time
 import sys
 import os
+import src.vector_plot as vp
 
+st.write("Loaded:", dir(vp))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Clear cache to force updates
 st.cache_data.clear()

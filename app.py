@@ -5,7 +5,6 @@ import sys
 import os
 import src.vector_plot as vp
 
-st.write("Loaded:", dir(vp))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Clear cache to force updates
 st.cache_data.clear()
@@ -92,3 +91,4 @@ if run_animation:
     st.sidebar.success("Cycle complete")
 else:
     render_all(st.session_state.matrix)
+st.write("Loaded:", dir(vp))

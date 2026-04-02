@@ -9,7 +9,7 @@ import time
 # CONFIG
 # ------------------------------------------------------------------------------
 st.set_page_config(layout="wide")
-st.title("🌀 IVC Symbolic Energy System — Unified Field Mode")
+st.title("🌀 IVC Symbolic Energy System — Coherence Engine")
 
 # ------------------------------------------------------------------------------
 # SIDEBAR
@@ -22,8 +22,10 @@ run_animation = st.sidebar.toggle("▶️ Run Global Synchrony", False)
 speed = st.sidebar.slider("Speed", 0.01, 0.2, 0.05)
 field_mode = st.sidebar.toggle("🌊 Field Mode", True)
 
+uploaded = st.sidebar.file_uploader("Upload Symbol Matrix (CSV)", type=["csv"])
+
 # ------------------------------------------------------------------------------
-# DATA GENERATION
+# DATA INPUT
 # ------------------------------------------------------------------------------
 def generate_data(n):
     np.random.seed(42)
@@ -31,12 +33,47 @@ def generate_data(n):
     values = np.random.rand(n, n)
     return pd.DataFrame(values, index=symbols, columns=symbols)
 
+def load_data():
+    if uploaded:
+        df = pd.read_csv(uploaded, index_col=0)
+        return df
+    return generate_data(num_symbols)
+
+# ------------------------------------------------------------------------------
+# CORE COMPUTATION
+# ------------------------------------------------------------------------------
 def compute_resonance(df):
     data = df.to_numpy()
     norm = np.linalg.norm(data, axis=1, keepdims=True)
     normalized = data / (norm + 1e-9)
     res = np.dot(normalized, normalized.T)
     return pd.DataFrame(res, index=df.index, columns=df.columns)
+
+def compute_energy(matrix):
+    return np.sum(matrix.values, axis=1)
+
+def compute_flow(matrix):
+    grad = np.gradient(matrix.values)
+    flow = grad[0] + grad[1]
+    v = np.mean(flow, axis=1)
+    return np.stack([v, v, v], axis=1)
+
+# ------------------------------------------------------------------------------
+# COHERENCE ENGINE
+# ------------------------------------------------------------------------------
+def compute_coherence(matrix):
+    M = matrix.values
+    eigenvals = np.linalg.eigvals(M)
+    coherence = np.max(np.real(eigenvals)) / (np.sum(np.abs(eigenvals)) + 1e-9)
+    return float(coherence)
+
+def coherence_label(ci):
+    if ci > 0.6:
+        return "🔥 HIGH COHERENCE (Aligned System)"
+    elif ci > 0.3:
+        return "⚡ EMERGING COHERENCE"
+    else:
+        return "🌑 LOW COHERENCE"
 
 # ------------------------------------------------------------------------------
 # CLUSTERING
@@ -61,23 +98,10 @@ def find_clusters(matrix, threshold):
     return clusters
 
 # ------------------------------------------------------------------------------
-# ENERGY + FLOW
-# ------------------------------------------------------------------------------
-def compute_energy(matrix):
-    return {s: float(v) for s, v in matrix.sum(axis=1).items()}
-
-def compute_flow(matrix):
-    data = matrix.to_numpy()
-    grad = np.gradient(data)
-    flow = grad[0] + grad[1]
-    v = np.mean(flow, axis=1)
-    return np.stack([v, v, v], axis=1)
-
-# ------------------------------------------------------------------------------
 # EVOLUTION
 # ------------------------------------------------------------------------------
 def evolve(matrix, t=0.05):
-    M = matrix.to_numpy()
+    M = matrix.values
     phase = np.sin(np.linspace(0, 2*np.pi, M.shape[0]))[:, None]
     evolved = M + t * (np.dot(M, M.T) * phase)
     evolved = np.clip(evolved, 0, 1)
@@ -114,22 +138,18 @@ def render_flow(matrix, flow):
     return fig
 
 def render_frequency(energy, t):
-    symbols = list(energy.keys())
-    vals = np.array(list(energy.values()))
-    freqs = np.linspace(0.1, 2.0, len(vals))
-
     fig = go.Figure()
+    freqs = np.linspace(0.1, 2.0, len(energy))
 
-    for i in range(len(symbols)):
-        amp = vals[i] * (1 + 0.3*np.sin(t + freqs[i]))
+    for i, val in enumerate(energy):
+        amp = val * (1 + 0.3*np.sin(t + freqs[i]))
         z = amp * np.sin(freqs[i]*np.pi + t)
 
         fig.add_trace(go.Scatter3d(
             x=[freqs[i], freqs[i]],
             y=[0, amp],
             z=[0, z],
-            mode="lines",
-            name=symbols[i]
+            mode="lines"
         ))
 
     fig.update_layout(title="Frequency Spectrum", height=500)
@@ -155,16 +175,16 @@ def render_field(matrix, t):
     return fig
 
 # ------------------------------------------------------------------------------
-# STATE
+# INIT
 # ------------------------------------------------------------------------------
 if "matrix" not in st.session_state:
-    data = generate_data(num_symbols)
+    data = load_data()
     st.session_state.matrix = compute_resonance(data)
 
 # ------------------------------------------------------------------------------
 # LAYOUT
 # ------------------------------------------------------------------------------
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 field_area = st.container()
 
 # ------------------------------------------------------------------------------
@@ -175,20 +195,25 @@ def render_all(matrix, t):
     energy = compute_energy(matrix)
     flow = compute_flow(matrix)
 
-    col1.plotly_chart(render_resonance(matrix, clusters), use_container_width=True)
-    col2.plotly_chart(render_flow(matrix, flow), use_container_width=True)
-    col1.plotly_chart(render_frequency(energy, t), use_container_width=True)
+    ci = compute_coherence(matrix)
+
+    col1.metric("Coherence Index", f"{ci:.3f}")
+    col2.metric("State", coherence_label(ci))
+
+    col1.plotly_chart(render_resonance(matrix, clusters), use_container_width=True, key=f"res_{t}")
+    col2.plotly_chart(render_flow(matrix, flow), use_container_width=True, key=f"flow_{t}")
+    col3.plotly_chart(render_frequency(energy, t), use_container_width=True, key=f"freq_{t}")
 
     if field_mode:
-        field_area.plotly_chart(render_field(matrix, t), use_container_width=True)
+        field_area.plotly_chart(render_field(matrix, t), use_container_width=True, key=f"field_{t}")
 
 # ------------------------------------------------------------------------------
-# RUN LOOP
+# LOOP
 # ------------------------------------------------------------------------------
 if run_animation:
     for step in range(60):
         st.session_state.matrix = evolve(st.session_state.matrix)
-        render_all(st.session_state.matrix, step * 0.2)
+        render_all(st.session_state.matrix, step)
         time.sleep(speed)
 else:
     render_all(st.session_state.matrix, 0)

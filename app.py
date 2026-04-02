@@ -1,7 +1,10 @@
 import streamlit as st
 import numpy as np
 import time
+import sys
+import os
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Clear cache to force updates
 st.cache_data.clear()
 

@@ -9,12 +9,17 @@ class RealTime369Transducer:
         self.sample_rate = sample_rate
         self.block_size = block_size
         
+        # Change-of-base calculations for standard bases
+        log_3 = lambda x: np.log(x) / np.log(3.0)
+        log_6 = lambda x: np.log(x) / np.log(6.0)
+        log_9 = lambda x: np.log(x) / np.log(9.0)
+        
         # Initialize the 3-6-9 Tri-Particle Transformation Matrix
         # Maps 1D input vectors to the 3D basis vectors of the cosmic medium
         self.M_369 = np.array([
-            [3.0,            np.log3(6.0),   np.log3(9.0)],
-            [np.log10(6.0),  6.0,            np.log10(9.0)],
-            [1.0/3.0,        1.0/6.0,        9.0]
+            [3.0,       log_3(6.0), log_3(9.0)],
+            [log_6(3.0), 6.0,        log_6(9.0)],
+            [log_9(3.0), log_9(6.0), 9.0]
         ], dtype=np.float64)
         
     def _calculate_digital_root_scalar(self, val):
@@ -53,9 +58,9 @@ class RealTime369Transducer:
         transformed_vectors = np.dot(self.M_369, V_L)
         
         # Extract target amplitudes scaled by the 3-6-9 constraints
-        target_amp_3 = transformed_vectors * 0.3
-        target_amp_6 = transformed_vectors * 0.6
-        target_amp_9 = transformed_vectors * 0.9
+        target_amp_3 = transformed_vectors[0] * 0.3
+        target_amp_6 = transformed_vectors[1] * 0.6
+        target_amp_9 = transformed_vectors[2] * 0.9
         
         # Step 4: Inverse Transient Synthesis (Acoustic Delta Function)
         t_axis = np.linspace(0, self.block_size / self.sample_rate, self.block_size)

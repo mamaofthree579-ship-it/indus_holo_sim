@@ -67,8 +67,8 @@ class RealTime369Transducer:
         # Step 4: Inverse Transient Synthesis (Acoustic Delta Function)
         t_axis = np.linspace(0, self.block_size / self.sample_rate, self.block_size)
         
-        # Triadic boundary check (Is it a resonant anchor?)
-        is_resonant = digital_root in
+        # FIXED: Triadic boundary check (Is it a resonant anchor?)
+        is_resonant = digital_root in [3, 6, 9]
         decay_constant = 100.0 if is_resonant else 800.0  
         
         # Generate phase-locked output waveform
@@ -87,17 +87,13 @@ class RealTime369Transducer:
 
 def convert_to_wav_bytes(signal_array, sample_rate):
     """Converts a normalized float32 numpy array into an in-memory 16-bit PCM WAV byte stream."""
-    # Ensure signal is strictly normalized between -1.0 and 1.0 to prevent hard clipping artifacts
     max_val = np.max(np.abs(signal_array))
     if max_val > 0:
         normalized_signal = signal_array / max_val
     else:
         normalized_signal = signal_array
         
-    # Cast float values safely to 16-bit Signed Integers for classical media players
     pcm_16bit = (normalized_signal * 32767).astype(np.int16)
-    
-    # Compile directly into binary RAM buffer
     byte_io = io.BytesIO()
     wavfile.write(byte_io, sample_rate, pcm_16bit)
     return byte_io.getvalue()
@@ -118,7 +114,7 @@ freq_1 = st.sidebar.slider("Base Frequency (Hz)", 100, 2000, 440)
 freq_2 = st.sidebar.slider("Harmonic Overlay (Hz)", 200, 4000, 880)
 noise_level = st.sidebar.slider("Linear Speech Fragmentation (Noise)", 0.0, 1.0, 0.2)
 
-block_size = st.sidebar.selectbox("Block Size (Chronon Update Window)",, index=2)
+block_size = st.sidebar.selectbox("Block Size (Chronon Update Window)", [512, 1048, 2048, 4096], index=2)
 sample_rate = 44100
 
 # Initialize Transducer Engine dynamically based on sidebar
@@ -137,12 +133,12 @@ transduced_output, extraction_vector, root_result = transducer.process_buffer(si
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric(label="Calculated Signal Energy", value=f"{extraction_vector:.4f}")
+    st.metric(label="Calculated Signal Energy", value=f"{extraction_vector[0]:.4f}")
 with col2:
-    st.metric(label="Mean Spectrum Frequency", value=f"{extraction_vector:.2f} Hz")
+    st.metric(label="Mean Spectrum Frequency", value=f"{extraction_vector[1]:.2f} Hz")
 with col3:
-    # Stylize the modulo 9 output based on triadic anchors
-    is_anchor = root_result in
+    # FIXED: Stylize the modulo 9 output based on triadic anchors
+    is_anchor = root_result in [3, 6, 9]
     status_label = "✅ RESONANT ANCHOR" if is_anchor else "❌ PHASELESS INSTABILITY"
     st.metric(label=f"Modulo-9 Digital Root ({status_label})", value=str(root_result))
 
@@ -152,7 +148,6 @@ st.markdown("---")
 st.subheader("🔊 Acoustic Waveform Player Modules")
 audio_col1, audio_col2 = st.columns(2)
 
-# Render bytes to play audio natively in browser
 with audio_col1:
     st.markdown("**1D Modern Speech Profile (Fragmented Base Waves & Background Chaos)**")
     input_wav_bytes = convert_to_wav_bytes(simulated_input, sample_rate)

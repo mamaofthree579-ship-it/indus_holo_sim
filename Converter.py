@@ -61,7 +61,7 @@ class RealTime369Transducer:
         t_axis = np.linspace(0, self.block_size / self.sample_rate, self.block_size)
         
         # Triadic boundary check (Is it a resonant anchor?)
-        is_resonant = digital_root in
+        is_resonant = digital_root in [3, 6, 9]
         decay_constant = 100.0 if is_resonant else 800.0  
         
         # Generate phase-locked output waveform
@@ -118,7 +118,7 @@ with col2:
     st.metric(label="Mean Spectrum Frequency", value=f"{extraction_vector[1]:.2f} Hz")
 with col3:
     # Stylize the modulo 9 output based on triadic anchors
-    is_anchor = root_result in
+    is_anchor = root_result in [3, 6, 9]
     status_label = "✅ RESONANT ANCHOR" if is_anchor else "❌ PHASELESS INSTABILITY"
     st.metric(label=f"Modulo-9 Digital Root ({status_label})", value=str(root_result))
 

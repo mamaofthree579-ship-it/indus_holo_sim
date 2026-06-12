@@ -64,18 +64,23 @@ class RealTime369Transducer:
         target_amp_6 = transformed_vectors * 0.6
         target_amp_9 = transformed_vectors * 0.9
         
+        # FIXED: Compress the 3-element vector arrays into scalar amplitudes using L2 Norm
+        amp_3_scalar = np.linalg.norm(target_amp_3)
+        amp_6_scalar = np.linalg.norm(target_amp_6)
+        amp_9_scalar = np.linalg.norm(target_amp_9)
+        
         # Step 4: Inverse Transient Synthesis (Acoustic Delta Function)
         t_axis = np.linspace(0, self.block_size / self.sample_rate, self.block_size)
         
-        # FIXED: Triadic boundary check (Is it a resonant anchor?)
+        # Triadic boundary check (Is it a resonant anchor?)
         is_resonant = digital_root in [3, 6, 9]
         decay_constant = 100.0 if is_resonant else 800.0  
         
-        # Generate phase-locked output waveform
+        # Generate phase-locked output waveform using scalar values
         output_buffer = np.exp(-decay_constant * t_axis) * (
-            target_amp_3 * np.sin(3.0 * np.pi * mean_frequency * t_axis) +
-            target_amp_6 * np.sin(6.0 * np.pi * mean_frequency * t_axis) +
-            target_amp_9 * np.sin(9.0 * np.pi * mean_frequency * t_axis)
+            amp_3_scalar * np.sin(3.0 * np.pi * mean_frequency * t_axis) +
+            amp_6_scalar * np.sin(6.0 * np.pi * mean_frequency * t_axis) +
+            amp_9_scalar * np.sin(9.0 * np.pi * mean_frequency * t_axis)
         )
         
         # Normalize to prevent clipping
@@ -137,7 +142,7 @@ with col1:
 with col2:
     st.metric(label="Mean Spectrum Frequency", value=f"{extraction_vector[1]:.2f} Hz")
 with col3:
-    # FIXED: Stylize the modulo 9 output based on triadic anchors
+    # Stylize the modulo 9 output based on triadic anchors
     is_anchor = root_result in [3, 6, 9]
     status_label = "✅ RESONANT ANCHOR" if is_anchor else "❌ PHASELESS INSTABILITY"
     st.metric(label=f"Modulo-9 Digital Root ({status_label})", value=str(root_result))

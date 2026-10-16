@@ -323,8 +323,8 @@ if input_active:
         
         for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple[0]  # 💡 FIXED: Isolates the primitive X position
-
+            x_coord = coord_tuple  # Isolated horizontal coordinate element safely
+            raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
             
             if x_coord < 128:
                 left_side_nodes += 1
@@ -334,6 +334,7 @@ if input_active:
                 right_angles_sum += raw_ang
                 
         total_nodes = left_side_nodes + right_side_nodes
+
         
         if total_nodes > 0:
             asymmetry_index = ((left_side_nodes - right_side_nodes) / total_nodes) * 100.0

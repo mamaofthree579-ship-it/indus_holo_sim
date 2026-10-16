@@ -241,7 +241,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             })
         st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
 
-    # ----------------------------------------------------
+     # ----------------------------------------------------
     # 4. ASYMMETRY POINTER & HIERARCHICAL ACCESS INDEX
     # ----------------------------------------------------
     st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
@@ -255,8 +255,8 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         
         for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple[0]  # 💡 FIXED: Grabs the X-axis value
-
+            x_coord = coord_tuple[0]  # Isolated horizontal coordinate element
+            raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
             
             if x_coord < 128:
                 left_side_nodes += 1
@@ -301,5 +301,4 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
                 {"Matrix Quadrant": "Right Data Sector (≥ 128px Axis)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
             ])
             st.dataframe(df_asym, use_container_width=True, hide_index=True)
-else:
-    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")
+

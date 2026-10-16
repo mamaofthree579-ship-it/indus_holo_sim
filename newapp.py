@@ -386,9 +386,9 @@ LEXICON_REGISTRY = [
         "Min Access": "Level 3 (System Engineer)"
     }
 ]
-    # ----------------------------------------------------
-    # 5. MOLECULAR LEXICON DECODER TERMINAL
-    # ----------------------------------------------------
+# ----------------------------------------------------
+# 5. MOLECULAR LEXICON DECODER TERMINAL
+# ----------------------------------------------------
     st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
     st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
     

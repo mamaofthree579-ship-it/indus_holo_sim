@@ -235,3 +235,78 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
 else:
     st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")
+    # ----------------------------------------------------
+    # 4. ASYMMETRY POINTER & HIERARCHICAL ACCESS INDEX
+    # ----------------------------------------------------
+    st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
+    st.markdown("Analyzing spatial imbalance vectors to isolate reading direction pointers and hidden 'System Engineer' data channels.")
+    
+    current_tags, _ = process_binary_matrix(raw_canvas, tolerance_deg)
+    
+    if current_tags:
+        left_side_nodes = 0
+        right_side_nodes = 0
+        left_angles_sum = 0.0
+        right_angles_sum = 0.0
+        
+        # Center axis of our 256x256 normalized canvas matrix is 128
+        for t in current_tags:
+            # Parse coordinate string back to integers safely
+            coord_tuple = eval(t["Coordinate Location"])
+            x_coord = coord_tuple[0]
+            # Strip degree symbol from angle string before casting to float
+            raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
+            
+            if x_coord < 128:
+                left_side_nodes += 1
+                left_angles_sum += raw_ang
+            else:
+                right_side_nodes += 1
+                right_angles_sum += raw_ang
+                
+        total_nodes = left_side_nodes + right_side_nodes
+        
+        if total_nodes > 0:
+            # Calculate the Asymmetry Imbalance Percentage
+            asymmetry_index = ((left_side_nodes - right_side_nodes) / total_nodes) * 100.0
+            
+            asym_col1, asym_col2 = st.columns(2)
+            with asym_col1:
+                st.metric(
+                    label="🧭 Directional Asymmetry Index", 
+                    value=f"{round(asymmetry_index, 1)}%",
+                    delta="Left-Weighted Pointer" if asymmetry_index > 0 else "Right-Weighted Pointer" if asymmetry_index < 0 else "Perfect Balance (Zero Pointer)"
+                )
+                
+                # Determine Reading Direction based on geometric weight bias
+                if asymmetry_index > 15.0:
+                    st.info("⬅️ **SYSTEM READING DIRECTION:** Vector weights indicate an intentional **Right-to-Left** operational sweep (Standard Harappan seal format).")
+                elif asymmetry_index < -15.0:
+                    st.info("➡️ **SYSTEM READING DIRECTION:** Vector weights indicate an intentional **Left-to-Right** operational sweep (Standard impression/clay format).")
+                else:
+                    st.info("🔄 **SYSTEM READING DIRECTION:** Balanced geometry. Indicates a static anchor sign or dual-directional parity check.")
+                    
+            with asym_col2:
+                # Calculate the Access Tier Level based on geometric complexity
+                # System engineers would plant intricate, multi-angled nodes
+                unique_intervals = len(set([t["Harmonic Grid Link"] for t in current_tags]))
+                
+                if unique_intervals >= 4 and abs(asymmetry_index) > 10:
+                    st.success("👑 **DATA ACCESS LEVEL: LEVEL 3 (SYSTEM ENGINEER)**  \nHidden data channel active. This sign contains highly asymmetric, multi-harmonic tags accessible only via specialized photometric angles.")
+                elif unique_intervals >= 2:
+                    st.warning("🤝 **DATA ACCESS LEVEL: LEVEL 2 (GUILD AUDITOR)**  \nStandard administrative verification layer. Tracks ledger metrics and commodity validation frameworks.")
+                else:
+                    st.error("🛒 **DATA ACCESS LEVEL: LEVEL 1 (PUBLIC MARKET)**  \nSurface level semantic token. Direct visual logograph representing standard commodity categorization.")
+                    
+            # Render a mini-matrix breakdown table for the system engineer view
+            st.markdown("### 🛠️ Sub-Surface Geometric Weight Distribution")
+            df_asym = pd.DataFrame([
+                {"Matrix Quadrant": "Left Data Sector (< 128px Axis)", "Active Nodes": left_side_nodes, "Cumulative Angular Energy": f"{round(left_angles_sum, 1)}°"},
+                {"Matrix Quadrant": "Right Data Sector (≥ 128px Axis)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
+            ])
+            st.dataframe(df_asym, use_container_width=True, hide_index=True)
+            
+        else:
+            st.caption("Awaiting distinct intersection configurations to measure spatial balancing vectors.")
+    else:
+        st.caption("Draw structural segments with directional imbalance to compute hierarchical asymmetry indexes.")

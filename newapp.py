@@ -1,13 +1,13 @@
+import streamlit as st
 import urllib.request
 import numpy as np
 import cv2
-from scipy.signal import find_peaks
+import pandas as pd
+from skimage.morphology import skeletonize
 
 # ==========================================
 # HARMONIC MATRIX: JUST INTONATION FREQUENCIES
 # ==========================================
-# We map angular geometry (0 to 90 degrees) to exact fractional ratios.
-# Normalized scale base: 90 degrees = Octave (2:1 ratio)
 JUST_INTONATION_SCALE = {
     "1:1 (Unison / 0° Base)": 0.0,
     "16:15 (Minor Second)": 90.0 * np.log2(16/15),   # ~ 8.44°
@@ -24,93 +24,98 @@ JUST_INTONATION_SCALE = {
     "2:1 (Octave / 90° Axis)": 90.0                   # 90.0°
 }
 
-def download_indus_sign(url):
-    """Fetches a digital grapheme directly from the web."""
+# --- Streamlit Page Configuration ---
+st.set_page_config(page_title="Indus Script Harmonic Analyzer", layout="wide")
+st.title("🏛️ Indus Script Geometric Data Tag Analyzer")
+st.markdown("Testing multi-layer 3D data-encoding theories using mathematical fractional harmonic ratios and just intonation grids.")
+
+# --- Sidebar Controls ---
+st.sidebar.header("🎛️ Data Layer Parameters")
+
+# Simulate lighting layers via adaptive threshing
+threshold_val = st.sidebar.slider("Simulated Light/Depth Layer (Threshold)", 30, 220, 127)
+tolerance_deg = st.sidebar.slider("Harmonic Alignment Tolerance (Degrees)", 0.5, 5.0, 2.0, step=0.5)
+
+# Preset image options from public repos
+image_options = {
+    "Fish Sign (Standard Compound)": "https://wikimedia.org",
+    "Jar / U-Sign Structure": "https://wikimedia.org"
+}
+selected_preset = st.sidebar.selectbox("Choose Sample Sign to Analyze", list(image_options.keys()))
+image_url = image_options[selected_preset]
+
+# --- Core Processing Pipeline ---
+@st.cache_data
+def download_sign(url):
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
             return cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
     except Exception as e:
-        print(f"Network error loading database symbol: {e}")
+        st.error(f"Failed to load image from database: {e}")
         return None
 
-def extract_and_tag_angles(bw, tolerance_deg=1.5):
-    """
-    Skeletons the sign, detects junctions/turns, evaluates spatial orientation vectors,
-    and tags joints that match fractional harmonic intervals.
-    """
-    # 1. Generate structural skeleton
-    from skimage.morphology import skeletonize
-    sk = skeletonize(bw > 0).astype(np.uint8)
-    
-    # 2. Extract edge contours from skeleton to find straight line segment paths
+raw_img = download_sign(image_url)
+
+if raw_img is not None:
+    # Binarize and handle canvas inversion automatically
+    _, thresh_img = cv2.threshold(raw_img, threshold_val, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    if np.mean(thresh_img) > 127:
+        thresh_img = 255 - thresh_img
+
+    # Generate topological skeleton
+    sk = skeletonize(thresh_img > 0).astype(np.uint8)
     contours, _ = cv2.findContours(sk, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     detected_tags = []
-    
+    annotated_display = cv2.cvtColor(thresh_img, cv2.COLOR_GRAY2RGB)
+
+    # Walk through shape geometries
     for c in contours:
         if len(c) < 3:
             continue
-        # Squeeze down to clear point pairs
         pts = c.reshape(-1, 2)
         
-        # Calculate sequential directional vectors
         for i in range(1, len(pts) - 1):
             v1 = pts[i] - pts[i-1]
             v2 = pts[i+1] - pts[i]
             
-            dot_product = np.dot(v1, v2)
-            norm_v1 = np.linalg.norm(v1)
-            norm_v2 = np.linalg.norm(v2)
-            
-            if norm_v1 == 0 or norm_v2 == 0:
+            norm_product = np.linalg.norm(v1) * np.linalg.norm(v2)
+            if norm_product == 0:
                 continue
                 
-            cos_angle = dot_product / (norm_v1 * norm_v2)
-            # Clip boundary calculation safely
-            cos_angle = np.clip(cos_angle, -1.0, 1.0)
-            
-            # Absolute structural angle deviation from straight line reference
+            cos_angle = np.clip(np.dot(v1, v2) / norm_product, -1.0, 1.0)
             angle_deg = np.degrees(np.arccos(cos_angle))
-            # Bound within primary quadrant for 90-degree axis mapping
             angle_quadrant = angle_deg % 90
             
-            # Cross-reference against Just Intonation Harmonic Scale
             for interval_name, target_angle in JUST_INTONATION_SCALE.items():
                 if abs(angle_quadrant - target_angle) <= tolerance_deg:
+                    coord = tuple(pts[i])
                     detected_tags.append({
-                        "Coordinate": tuple(pts[i]),
-                        "Measured Angle": round(angle_deg, 2),
-                        "Harmonic Tag": interval_name,
-                        "Deviation": round(abs(angle_quadrant - target_angle), 3)
+                        "Coordinate": str(coord),
+                        "Measured Axis Angle": f"{round(angle_deg, 1)}°",
+                        "Harmonic Grid Link": interval_name,
+                        "Deviation": f"{round(abs(angle_quadrant - target_angle), 2)}°"
                     })
+                    # Tag visually on our display matrix
+                    cv2.circle(annotated_display, coord, 3, (255, 0, 0), -1)
                     break
-                    
-    return detected_tags
 
-if __name__ == "__main__":
-    # Pulling an active open-access Indus script character profile from Wikipedia / Harappa.com archives
-    # Representing a standard fish/jar compound sign structure
-    sample_url = "https://wikimedia.org"
+    # --- UI Grid Layout ---
+    col1, col2 = st.columns([1, 2])
     
-    print("Connecting to database repository...")
-    raw = download_indus_sign(sample_url)
-    
-    if raw is not None:
-        # Preprocess binary mask (Inverting to make background dark if needed)
-        _, thresh_img = cv2.threshold(raw, 127, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        if np.mean(thresh_img) > 127:
-            thresh_img = 255 - thresh_img
+    with col1:
+        st.subheader("📷 Processing Layers")
+        st.image(thresh_img, caption="Binary Layer Slice (Simulated Lighting Profile)", use_container_width=True)
+        st.image(annotated_display, caption="Tagged Intersections (Blue Anchors)", use_container_width=True)
+
+    with col2:
+        st.subheader("🎼 Isolated Geometric Harmonic Matches")
+        if detected_tags:
+            df_tags = pd.DataFrame(detected_tags).drop_duplicates(subset=["Harmonic Grid Link"])
+            st.dataframe(df_tags, use_container_width=True, hide_index=True)
             
-        print("Analyzing geometric intersections for harmonic ratios...")
-        tags = extract_and_tag_angles(thresh_img, tolerance_deg=2.0)
-        
-        # Display data summary matrix
-        import pandas as pd
-        if tags:
-            df = pd.DataFrame(tags)
-            print("\n=== DETECTED GEOMETRIC DATA TAGS (JUST INTONATION MATRICES) ===")
-            print(df.drop_duplicates(subset=['Harmonic Tag']).to_string(index=False))
+            st.success(f"Isolated {len(df_tags)} distinct physical junctions conforming perfectly to musical interval architecture.")
         else:
-            print("\nNo precise harmonic tags isolated with current threshold parameters.")
+            st.info("No geometry segments match the selected musical ratio tolerances at this specific threshold layer. Try adjusting the sliders in the sidebar.")

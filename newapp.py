@@ -253,10 +253,10 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         left_angles_sum = 0.0
         right_angles_sum = 0.0
         
-        for t in current_tags:
+                for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple
-            raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
+            x_coord = coord_tuple[0]  # 💡 FIXED: Grabs the X-axis value
+
             
             if x_coord < 128:
                 left_side_nodes += 1

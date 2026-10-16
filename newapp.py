@@ -241,7 +241,8 @@ else:
     st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
     st.markdown("Analyzing spatial imbalance vectors to isolate reading direction pointers and hidden 'System Engineer' data channels.")
     
-    current_tags, _ = process_binary_matrix(raw_canvas, tolerance_deg)
+        # Change 'raw_canvas' to 'thresh_img' on this line:
+    current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg)
     
     if current_tags:
         left_side_nodes = 0
@@ -249,9 +250,10 @@ else:
         left_angles_sum = 0.0
         right_angles_sum = 0.0
         
-        # Center axis of our 256x256 normalized canvas matrix is 128
         for t in current_tags:
-            # Parse coordinate string back to integers safely
+            # Change 'raw_canvas' to 'thresh_img' on this line too:
+            current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg)
+
             coord_tuple = eval(t["Coordinate Location"])
             x_coord = coord_tuple[0]
             # Strip degree symbol from angle string before casting to float

@@ -321,10 +321,10 @@ if input_active:
         left_angles_sum = 0.0
         right_angles_sum = 0.0
         
-        for t in current_tags:
+            for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple
-            raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
+            x_coord = coord_tuple[0]  # 💡 FIXED: Isolates the primitive X position
+
             
             if x_coord < 128:
                 left_side_nodes += 1

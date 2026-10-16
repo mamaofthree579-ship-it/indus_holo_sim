@@ -332,3 +332,100 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             st.dataframe(df_asym, use_container_width=True, hide_index=True)
 else:
     st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")
+
+# ========================================================
+# APPENDIX B: MOLECULAR DICTIONARY REGISTRY
+# ========================================================
+LEXICON_REGISTRY = [
+    {
+        "Molecules": "⊕ (In-Dara Root)",
+        "Atoms": ["Circle", "Vertical Line"],
+        "Language": "Indo-Aryan",
+        "Phonetic": "In",
+        "Translation": "Root of 'In-Dara' (Divine Auth)",
+        "Min Access": "Level 2 (Auditor)"
+    },
+    {
+        "Molecules": ">>> (Stacked Chevrons)",
+        "Atoms": ["Angle"],
+        "Language": "Indo-Aryan",
+        "Phonetic": "Dara",
+        "Translation": "Second element of 'In-Dara'",
+        "Min Access": "Level 2 (Auditor)"
+    },
+    {
+        "Molecules": "Fish Sign (mīn)",
+        "Atoms": ["Arc (Semi-Circle)", "Horizontal Line"],
+        "Language": "Dravidian",
+        "Phonetic": "mīn",
+        "Translation": "Fish / Astral Marker / Value Node",
+        "Min Access": "Level 1 (Public)"
+    },
+    {
+        "Molecules": "Granary Token (kāṇa)",
+        "Atoms": ["Box", "Diagonal Line"],
+        "Language": "Dravidian",
+        "Phonetic": "kāṇa",
+        "Translation": "Granary Vault / State Depository",
+        "Min Access": "Level 2 (Auditor)"
+    },
+    {
+        "Molecules": "Official / Man Sign (āḷ)",
+        "Atoms": ["Vertical Line", "Diagonal Line"],
+        "Language": "Dravidian",
+        "Phonetic": "āḷ",
+        "Translation": "Person / Bureaucratic Official",
+        "Min Access": "Level 1 (Public)"
+    },
+    {
+        "Molecules": "Chief Standard (vēntan)",
+        "Atoms": ["Trident / Fork", "U-Shape (Cup)"],
+        "Language": "Dravidian",
+        "Phonetic": "vēntan",
+        "Translation": "Chief / High Lord Contract",
+        "Min Access": "Level 3 (System Engineer)"
+    }
+]
+    # ----------------------------------------------------
+    # 5. MOLECULAR LEXICON DECODER TERMINAL
+    # ----------------------------------------------------
+    st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
+    st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
+    
+    # Map calculated harmonic locks back to raw atomic primitives
+    isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
+    detected_atoms = []
+    
+    if "1:1 (Unison)" in isolated_scale_links:
+        detected_atoms.append("Vertical Line")
+    if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
+        detected_atoms.append("Horizontal Line")
+    if "4:3 (Perfect Fourth)" in isolated_scale_links:
+        detected_atoms.append("Angle")
+    if "3:2 (Perfect Fifth)" in isolated_scale_links:
+        detected_atoms.append("Diagonal Line")
+        
+    if detected_atoms:
+        st.write(f"**Extracted Atomic Components:** {', '.join([f'`{a}`' for a in detected_atoms])}")
+        
+        match_rows = []
+        for molecule in LEXICON_REGISTRY:
+            # Calculate overlapping primitive counts
+            shared_atoms = set(molecule["Atoms"]).intersection(set(detected_atoms))
+            if shared_atoms:
+                match_rows.append({
+                    "Target Registry Inscription": molecule["Molecules"],
+                    "Language Core": molecule["Language"],
+                    "Phonetic Reading": f"/{molecule['Phonetic']}/",
+                    "Decoded Operational Meaning": molecule["Translation"],
+                    "Required Clearance": molecule["Min Access"],
+                    "Formula Match Weight": f"{len(shared_atoms)} / {len(molecule['Atoms'])} Atoms"
+                })
+                
+        if match_rows:
+            st.dataframe(pd.DataFrame(match_rows), use_container_width=True, hide_index=True)
+            st.success("📝 Lexicon cross-checking complete. Sub-surface atomic configurations translated successfully.")
+        else:
+            st.info("Geometry processed cleanly. Traced primitives represent an unregistered or variant atomic molecule configuration.")
+    else:
+        st.caption("Awaiting drawing vector tracing metrics to map structural lexicon rows.")

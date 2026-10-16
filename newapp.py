@@ -30,8 +30,7 @@ st.markdown("Testing multi-layer 3D data-encoding theories using mathematical fr
 
 st.sidebar.header("🎛️ Data Layer Parameters")
 
-# Interactive control sliders
-threshold_val = st.sidebar.slider("Simulated Light/Depth Layer (Threshold)", 10, 245, 127)
+threshold_val = st.sidebar.slider("Simulated Light/Depth Layer (Threshold)", 10, 245, 200)
 tolerance_deg = st.sidebar.slider("Harmonic Alignment Tolerance (Degrees)", 0.5, 5.0, 2.0, step=0.5)
 
 image_options = {
@@ -42,33 +41,41 @@ selected_preset = st.sidebar.selectbox("Choose Sample Sign to Analyze", list(ima
 image_url = image_options[selected_preset]
 
 @st.cache_data
-def download_sign(url):
+def download_and_flatten_sign(url):
+    """Downloads image with IMREAD_UNCHANGED to handle transparency layers safely."""
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
-            return cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
+            img = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
+            
+            # If the image has an Alpha Channel (transparency), blend it onto a white canvas
+            if img is not None and img.shape[-1] == 4:
+                alpha = img[:, :, 3] / 255.0
+                bg = np.ones_like(img[:, :, :3], dtype=np.uint8) * 255
+                for c in range(3):
+                    bg[:, :, c] = (alpha * img[:, :, c] + (1.0 - alpha) * 255).astype(np.uint8)
+                return cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY)
+            elif img is not None and len(img.shape) == 3:
+                return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            return img
     except Exception as e:
         st.error(f"Failed to load image from database: {e}")
         return None
 
-raw_img = download_sign(image_url)
+gray_img = download_and_flatten_sign(image_url)
 
-if raw_img is not None:
-    # Scale and fit boundaries to a clean normalized 256 square matrix
-    raw_img = cv2.resize(raw_img, (256, 256))
+if gray_img is not None:
+    gray_img = cv2.resize(gray_img, (256, 256))
     
-    # Controlled Threshold slicing: map pixels below value to white foreground (255)
-    _, thresh_img = cv2.threshold(raw_img, threshold_val, 255, cv2.THRESH_BINARY_INV)
-    
-    # Force check matrix array formatting
+    # Process threshold slice
+    _, thresh_img = cv2.threshold(gray_img, threshold_val, 255, cv2.THRESH_BINARY_INV)
     thresh_img = cv2.convertScaleAbs(thresh_img)
 
-    # Calculate structural bone skeleton profile
+    # Generate structural lines skeleton
     sk_bool = skeletonize(thresh_img > 0)
     sk = (sk_bool.astype(np.uint8)) * 255
     
-    # Pull geometric segment paths
     contours, _ = cv2.findContours(sk, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     detected_tags = []
@@ -100,23 +107,22 @@ if raw_img is not None:
                         "Harmonic Grid Link": interval_name,
                         "Deviation": f"{round(abs(angle_quadrant - target_angle), 2)}°"
                     })
-                    # Highlight localized tags clearly
                     cv2.circle(annotated_display, coord, 4, (255, 0, 0), -1)
                     break
 
-    # Layout using modern width configurations
+    # Standard columns layout using correct Streamlit parameters
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📷 Processing Layers")
-        st.image(thresh_img, caption="Binary Layer Slice (Simulated Lighting Profile)", width="stretch")
-        st.image(annotated_display, caption="Tagged Intersections (Blue Dots)", width="stretch")
+        st.image(thresh_img, caption="Binary Layer Slice (Simulated Lighting Profile)", use_container_width=True)
+        st.image(annotated_display, caption="Tagged Intersections (Blue Dots)", use_container_width=True)
 
     with col2:
         st.subheader("🎼 Isolated Geometric Harmonic Matches")
         if detected_tags:
             df_tags = pd.DataFrame(detected_tags).drop_duplicates(subset=["Harmonic Grid Link"])
-            st.dataframe(df_tags, width="stretch", hide_index=True)
+            st.dataframe(df_tags, use_container_width=True, hide_index=True)
             st.success(f"Isolated {len(df_tags)} unique physical junctions matching harmonic interval grids.")
         else:
-            st.info("No geometry segments match the selected musical ratio tolerances at this threshold layer. Try moving the threshold or tolerance sliders.")
+            st.info("No geometry segments match the selected musical ratio tolerances at this threshold layer. Try moving the threshold slider down (e.g., between 150 and 220) to capture the strokes.")

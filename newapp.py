@@ -397,7 +397,7 @@ if 'current_tags' not in locals() or not current_tags:
         current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg) if 'thresh_img' in locals() else ([], None)
     
     # Map calculated harmonic locks back to raw atomic primitives
-    isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
+isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
 
     
 if "1:1 (Unison)" in isolated_scale_links:

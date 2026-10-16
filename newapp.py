@@ -35,23 +35,15 @@ ARCHETYPES = {
 # --- Streamlit Dashboard Initializing ---
 st.set_page_config(page_title="Indus Epigraphic Matrix Engine", layout="wide")
 st.title("🏛️ Indus Epigraphic Multi-Layer Matrix Engine")
-st.markdown("Advanced analytical workstation isolating structural layer tracking, audio sonification, and authenticity fingerprints.")
+st.markdown("Advanced analytical workstation isolating structural layer tracking, audio sonification, and automated seal generation.")
 
-st.sidebar.header("🎛️ Analysis Configurations")
-tolerance_deg = st.sidebar.slider("Harmonic Resonance Tolerance (Deg)", 0.5, 5.0, 2.0, step=0.5)
-
-st.subheader("✏️ Draw Layer Geometry Below")
-canvas_result = st_canvas(
-    fill_color="rgba(255, 255, 255, 0)",
-    stroke_width=6,
-    stroke_color="#FFFFFF",
-    background_color="#000000",
-    height=256,
-    width=256,
-    drawing_mode="freedraw",
-    key="engine_canvas",
-    return_image_data=True,
+st.sidebar.header("🎛️ Input Mode Selector")
+generation_mode = st.sidebar.radio(
+    "Choose Input Stream:", 
+    ["Manual Freehand Drawing", "Automated Phonetic Seal Generator"]
 )
+
+tolerance_deg = st.sidebar.slider("Harmonic Resonance Tolerance (Deg)", 0.5, 5.0, 2.0, step=0.5)
 
 def process_binary_matrix(thresh, tol):
     """Core geometric filtering engine parsing joint angle configurations."""
@@ -90,14 +82,75 @@ def process_binary_matrix(thresh, tol):
                     cv2.circle(display_img, tuple(pts[i].astype(int)), 5, (0, 255, 255), -1)
                     break
     return tags, display_img
-# --- Core Pipeline Execution Loop ---
-if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0:
-    # Safely convert the drawing into a grayscale canvas right away
-    user_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+# Initialize a blank structural matrix canvas
+automated_canvas = np.zeros((256, 256), dtype=np.uint8)
+input_active = False
+
+# --- INPUT STREAM FLOW SELECTION ---
+if generation_mode == "Manual Freehand Drawing":
+    st.subheader("✏️ Draw Layer Geometry Below")
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 255, 255, 0)",
+        stroke_width=6,
+        stroke_color="#FFFFFF",
+        background_color="#000000",
+        height=256,
+        width=256,
+        drawing_mode="freedraw",
+        key="engine_canvas",
+        return_image_data=True,
+    )
+    if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0:
+        automated_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+        input_active = True
+else:
+    st.subheader("⚙️ Automated Cryptographic Token Generator")
+    st.sidebar.markdown("---")
+    st.sidebar.header("📜 Lexicon Encoder Registry")
     
-    # ----------------------------------------------------
-    # NEW: CLAY IMPRESSION SIMULATION ENGINE
-    # ----------------------------------------------------
+    preset_phrases = {
+        "Custom Blank Matrix": [],
+        "In-Dara (Divine Authority Title)": ["Circle", "Vertical Line", "Angle"],
+        "mīn (Standard Administrative Ingot)": ["Arc (Semi-Circle)", "Horizontal Line"],
+        "kāṇa āḷ (Granary Bureaucrat Token)": ["Box", "Diagonal Line", "Vertical Line"],
+        "vēntan (Chief Sovereign Contract)": ["Trident / Fork", "U-Shape (Cup)", "Angle"]
+    }
+    
+    selected_phrase = st.sidebar.selectbox("Select Target Phrase Blueprint:", list(preset_phrases.keys()))
+    atoms_to_generate = preset_phrases[selected_phrase]
+    
+    if atoms_to_generate:
+        input_active = True
+        # Synthesize geometric vector lines based on chosen atomic primitives
+        # Introduce controlled spatial asymmetries to verify Level 3 privileges
+        if "Vertical Line" in atoms_to_generate:
+            cv2.line(automated_canvas, (100, 40), (100, 216), 255, 6) # Shifted to left quadrant
+        if "Horizontal Line" in atoms_to_generate:
+            cv2.line(automated_canvas, (40, 128), (216, 128), 255, 6)
+        if "Circle" in atoms_to_generate:
+            cv2.circle(automated_canvas, (100, 128), (50), 255, 6)
+        if "Angle" in atoms_to_generate:
+            # Draw asymmetric chevrons
+            pts_chev = np.array([[60, 80], [100, 110], [60, 140]], np.int32)
+            cv2.polylines(automated_canvas, [pts_chev], False, 255, 6)
+        if "Box" in atoms_to_generate:
+            cv2.rectangle(automated_canvas, (60, 60), (196, 196), 255, 6)
+        if "Diagonal Line" in atoms_to_generate:
+            cv2.line(automated_canvas, (60, 60), (196, 196), 255, 6)
+        if "Trident / Fork" in atoms_to_generate:
+            cv2.line(automated_canvas, (128, 60), (128, 200), 255, 6)
+            cv2.line(automated_canvas, (80, 80), (80, 140), 255, 6)
+            cv2.line(automated_canvas, (176, 80), (176, 140), 255, 6)
+            cv2.line(automated_canvas, (80, 140), (176, 140), 255, 6)
+        if "U-Shape (Cup)" in atoms_to_generate:
+            cv2.ellipse(automated_canvas, (128, 150), (48, 30), 0, 0, 180, 255, 6)
+            
+        st.image(automated_canvas, caption=f"Synthesized Vector Blueprint: {selected_phrase}", width=256)
+    else:
+        st.info("Select a phonetic phrase blueprint from the sidebar dropdown list to generate a vector matrix.")
+
+# --- Core Pipeline Execution Loop ---
+if input_active:
     st.sidebar.markdown("---")
     st.sidebar.header("🏺 Matrix View Mode")
     view_mode = st.sidebar.radio(
@@ -105,12 +158,10 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         ["Original Seal View (Carved Intaglio)", "Clay Impression View (Stamped Relief)"]
     )
     
-    # If Clay mode is active, horizontally mirror the coordinate matrix (Axis 1)
     if view_mode == "Clay Impression View (Stamped Relief)":
-        raw_canvas = cv2.flip(user_canvas, 1)
-        st.sidebar.success("🔄 Horizontal Mirror Active: Simulating Clay Compression.")
+        raw_canvas = cv2.flip(automated_canvas, 1)
     else:
-        raw_canvas = user_canvas
+        raw_canvas = automated_canvas
 
     _, thresh_img = cv2.threshold(raw_canvas, 127, 255, cv2.THRESH_BINARY)
     
@@ -200,8 +251,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     df_p = pd.DataFrame(persistence_rows)
     df_pivot = df_p.pivot(index="Harmonic Scale Tier", columns="Layer Depth", values="Status")
     st.dataframe(df_pivot, use_container_width=True)
-
-       # ----------------------------------------------------
+    # ----------------------------------------------------
     # 2. AUDIO CHORD SYNTHESIZER
     # ----------------------------------------------------
     st.header("🎼 2. Acoustic Sonification Chord Node")
@@ -259,12 +309,11 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
                 "Matrix Match Confidence": f"{round(match_confidence, 1)}%"
             })
         st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
-
     # ----------------------------------------------------
     # 4. ASYMMETRY POINTER & HIERARCHICAL ACCESS INDEX
     # ----------------------------------------------------
     st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
-    st.markdown("Analyzing spatial imbalance vectors to isolate reading direction pointers and hidden 'System Engineer' data channels.")
+    st.markdown("Analyzing spatial imbalance vectors to isolate reading pointers.")
     
     if current_tags:
         left_side_nodes = 0
@@ -274,7 +323,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         
         for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple[0]  # Isolated horizontal coordinate element
+            x_coord = coord_tuple
             raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
             
             if x_coord < 128:
@@ -291,132 +340,72 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             
             asym_col1, asym_col2 = st.columns(2)
             with asym_col1:
-                st.metric(
-                    label="🧭 Directional Asymmetry Index", 
-                    value=f"{round(asymmetry_index, 1)}%",
-                    delta="Left-Weighted Pointer" if asymmetry_index > 0 else "Right-Weighted Pointer" if asymmetry_index < 0 else "Perfect Balance (Zero Pointer)"
-                )
+                st.metric(label="🧭 Directional Asymmetry Index", value=f"{round(asymmetry_index, 1)}%")
                 
-                # Dynamic text feedback changes based on whether image is mirrored
                 if view_mode == "Original Seal View (Carved Intaglio)":
                     if asymmetry_index > 15.0:
-                        st.info("⬅️ **SEAL CARVING AXIS:** Asymmetry vectors confirm a native **Right-to-Left** engraving sweep.")
+                        st.info("⬅️ **SEAL CARVING AXIS:** Right-to-Left engraving sweep.")
                     elif asymmetry_index < -15.0:
-                        st.info("➡️ **SEAL CARVING AXIS:** Asymmetry vectors confirm an inverted **Left-to-Right** engraving sweep.")
+                        st.info("➡️ **SEAL CARVING AXIS:** Left-to-Right engraving sweep.")
                     else:
                         st.info("🔄 **SEAL CARVING AXIS:** Static geometric equilibrium.")
                 else:
-                    # Clay view logic: flips direction interpretations
                     if asymmetry_index > 15.0:
-                        st.info("➡️ **CLAY READING FLOW:** Impression inversion projects an effective **Left-to-Right** reading flow.")
+                        st.info("➡️ **CLAY READING FLOW:** Left-to-Right reading flow.")
                     elif asymmetry_index < -15.0:
-                        st.info("⬅️ **CLAY READING FLOW:** Impression inversion projects an effective **Right-to-Left** reading flow.")
+                        st.info("⬅️ **CLAY READING FLOW:** Right-to-Left reading flow.")
                     else:
                         st.info("🔄 **CLAY READING FLOW:** Static geometric equilibrium.")
                     
             with asym_col2:
                 unique_intervals = len(set([t["Harmonic Grid Link"] for t in current_tags]))
-                
                 if unique_intervals >= 4 and abs(asymmetry_index) > 10:
-                    st.success("👑 **DATA ACCESS LEVEL: LEVEL 3 (SYSTEM ENGINEER)**  \nHidden data channel active. This sign contains highly asymmetric, multi-harmonic tags accessible only via specialized photometric angles.")
+                    st.success("👑 **DATA ACCESS LEVEL: LEVEL 3 (SYSTEM ENGINEER)**")
                 elif unique_intervals >= 2:
-                    st.warning("🤝 **DATA ACCESS LEVEL: LEVEL 2 (GUILD AUDITOR)**  \nStandard administrative verification layer. Tracks ledger metrics and commodity validation frameworks.")
+                    st.warning("🤝 **DATA ACCESS LEVEL: LEVEL 2 (GUILD AUDITOR)**")
                 else:
-                    st.error("🛒 **DATA ACCESS LEVEL: LEVEL 1 (PUBLIC MARKET)**  \nSurface level semantic token. Direct visual logograph representing standard commodity categorization.")
+                    st.error("🛒 **DATA ACCESS LEVEL: LEVEL 1 (PUBLIC MARKET)**")
                     
             st.markdown("### 🛠️ Sub-Surface Geometric Weight Distribution")
             df_asym = pd.DataFrame([
-                {"Matrix Quadrant": "Left Data Sector (< 128px Axis)", "Active Nodes": left_side_nodes, "Cumulative Angular Energy": f"{round(left_angles_sum, 1)}°"},
-                {"Matrix Quadrant": "Right Data Sector (≥ 128px Axis)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
+                {"Matrix Quadrant": "Left Data Sector (< 128px)", "Active Nodes": left_side_nodes, "Cumulative Angular Energy": f"{round(left_angles_sum, 1)}°"},
+                {"Matrix Quadrant": "Right Data Sector (≥ 128px)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
             ])
             st.dataframe(df_asym, use_container_width=True, hide_index=True)
-else:
-    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")
 
-# ========================================================
-# APPENDIX B: MOLECULAR DICTIONARY REGISTRY
-# ========================================================
-LEXICON_REGISTRY = [
-    {
-        "Molecules": "⊕ (In-Dara Root)",
-        "Atoms": ["Circle", "Vertical Line"],
-        "Language": "Indo-Aryan",
-        "Phonetic": "In",
-        "Translation": "Root of 'In-Dara' (Divine Auth)",
-        "Min Access": "Level 2 (Auditor)"
-    },
-    {
-        "Molecules": ">>> (Stacked Chevrons)",
-        "Atoms": ["Angle"],
-        "Language": "Indo-Aryan",
-        "Phonetic": "Dara",
-        "Translation": "Second element of 'In-Dara'",
-        "Min Access": "Level 2 (Auditor)"
-    },
-    {
-        "Molecules": "Fish Sign (mīn)",
-        "Atoms": ["Arc (Semi-Circle)", "Horizontal Line"],
-        "Language": "Dravidian",
-        "Phonetic": "mīn",
-        "Translation": "Fish / Astral Marker / Value Node",
-        "Min Access": "Level 1 (Public)"
-    },
-    {
-        "Molecules": "Granary Token (kāṇa)",
-        "Atoms": ["Box", "Diagonal Line"],
-        "Language": "Dravidian",
-        "Phonetic": "kāṇa",
-        "Translation": "Granary Vault / State Depository",
-        "Min Access": "Level 2 (Auditor)"
-    },
-    {
-        "Molecules": "Official / Man Sign (āḷ)",
-        "Atoms": ["Vertical Line", "Diagonal Line"],
-        "Language": "Dravidian",
-        "Phonetic": "āḷ",
-        "Translation": "Person / Bureaucratic Official",
-        "Min Access": "Level 1 (Public)"
-    },
-    {
-        "Molecules": "Chief Standard (vēntan)",
-        "Atoms": ["Trident / Fork", "U-Shape (Cup)"],
-        "Language": "Dravidian",
-        "Phonetic": "vēntan",
-        "Translation": "Chief / High Lord Contract",
-        "Min Access": "Level 3 (System Engineer)"
-    }
-]
-# ----------------------------------------------------
-# 5. MOLECULAR LEXICON DECODER TERMINAL
-# ----------------------------------------------------
-st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
-st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
+    # ----------------------------------------------------
+    # 5. MOLECULAR LEXICON DECODER TERMINAL
+    # ----------------------------------------------------
+    st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
     
-if 'current_tags' not in locals() or not current_tags:
+    if 'current_tags' not in locals() or not current_tags:
         current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg) if 'thresh_img' in locals() else ([], None)
     
-    # 💡 INITIALIZE THE LIST FIRST:
-detected_atoms = []
+    detected_atoms = []
+    isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
     
-    # Map calculated harmonic locks back to raw atomic primitives
-isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
-    
-if "1:1 (Unison)" in isolated_scale_links:
+    if "1:1 (Unison)" in isolated_scale_links:
         detected_atoms.append("Vertical Line")
-if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
+    if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
         detected_atoms.append("Horizontal Line")
-if "4:3 (Perfect Fourth)" in isolated_scale_links:
+    if "4:3 (Perfect Fourth)" in isolated_scale_links:
         detected_atoms.append("Angle")
-if "3:2 (Perfect Fifth)" in isolated_scale_links:
+    if "3:2 (Perfect Fifth)" in isolated_scale_links:
         detected_atoms.append("Diagonal Line")
-
         
-if detected_atoms:
+    LEXICON_REGISTRY = [
+        {"Molecules": "⊕ (In-Dara Root)", "Atoms": ["Circle", "Vertical Line"], "Language": "Indo-Aryan", "Phonetic": "In", "Translation": "Root of 'In-Dara'", "Min Access": "Level 2"},
+        {"Molecules": ">>> (Stacked Chevrons)", "Atoms": ["Angle"], "Language": "Indo-Aryan", "Phonetic": "Dara", "Translation": "Second element of 'In-Dara'", "Min Access": "Level 2"},
+        {"Molecules": "Fish Sign (mīn)", "Atoms": ["Arc (Semi-Circle)", "Horizontal Line"], "Language": "Dravidian", "Phonetic": "mīn", "Translation": "Fish Token", "Min Access": "Level 1"},
+        {"Molecules": "Granary Token (kāṇa)", "Atoms": ["Box", "Diagonal Line"], "Language": "Dravidian", "Phonetic": "kāṇa", "Translation": "Granary Depository", "Min Access": "Level 2"},
+        {"Molecules": "Official / Man Sign (āḷ)", "Atoms": ["Vertical Line", "Diagonal Line"], "Language": "Dravidian", "Phonetic": "āḷ", "Translation": "Official Personnel", "Min Access": "Level 1"},
+        {"Molecules": "Chief Standard (vēntan)", "Atoms": ["Trident / Fork", "U-Shape (Cup)"], "Language": "Dravidian", "Phonetic": "vēntan", "Translation": "Chief Sovereign Contract", "Min Access": "Level 3"}
+    ]
+        
+    if detected_atoms:
         st.write(f"**Extracted Atomic Components:** {', '.join([f'`{a}`' for a in detected_atoms])}")
-        
         match_rows = []
         for molecule in LEXICON_REGISTRY:
-            # Calculate overlapping primitive counts
             shared_atoms = set(molecule["Atoms"]).intersection(set(detected_atoms))
             if shared_atoms:
                 match_rows.append({
@@ -427,11 +416,8 @@ if detected_atoms:
                     "Required Clearance": molecule["Min Access"],
                     "Formula Match Weight": f"{len(shared_atoms)} / {len(molecule['Atoms'])} Atoms"
                 })
-                
         if match_rows:
             st.dataframe(pd.DataFrame(match_rows), use_container_width=True, hide_index=True)
-            st.success("📝 Lexicon cross-checking complete. Sub-surface atomic configurations translated successfully.")
-        else:
-            st.info("Geometry processed cleanly. Traced primitives represent an unregistered or variant atomic molecule configuration.")
+            st.success("📝 Lexicon cross-checking complete.")
 else:
-        st.caption("Awaiting drawing vector tracing metrics to map structural lexicon rows.")
+    st.info("🖋️ Awaiting vector inputs. Select an options filter to initialize.")

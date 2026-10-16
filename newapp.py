@@ -389,8 +389,8 @@ LEXICON_REGISTRY = [
 # ----------------------------------------------------
 # 5. MOLECULAR LEXICON DECODER TERMINAL
 # ----------------------------------------------------
-    st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
-    st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
+st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
+st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
     
     # Map calculated harmonic locks back to raw atomic primitives
     isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()

@@ -401,13 +401,13 @@ detected_atoms = []
     # Map calculated harmonic locks back to raw atomic primitives
 isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
     
-    if "1:1 (Unison)" in isolated_scale_links:
+if "1:1 (Unison)" in isolated_scale_links:
         detected_atoms.append("Vertical Line")
-    if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
+if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
         detected_atoms.append("Horizontal Line")
-    if "4:3 (Perfect Fourth)" in isolated_scale_links:
+if "4:3 (Perfect Fourth)" in isolated_scale_links:
         detected_atoms.append("Angle")
-    if "3:2 (Perfect Fifth)" in isolated_scale_links:
+if "3:2 (Perfect Fifth)" in isolated_scale_links:
         detected_atoms.append("Diagonal Line")
 
         

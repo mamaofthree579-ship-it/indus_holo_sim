@@ -396,16 +396,16 @@ st.markdown("Cross-referencing isolated geometric atoms against your custom tran
 isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
 detected_atoms = []
     
-    if "1:1 (Unison)" in isolated_scale_links:
+if "1:1 (Unison)" in isolated_scale_links:
         detected_atoms.append("Vertical Line")
-    if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
+if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
         detected_atoms.append("Horizontal Line")
-    if "4:3 (Perfect Fourth)" in isolated_scale_links:
+if "4:3 (Perfect Fourth)" in isolated_scale_links:
         detected_atoms.append("Angle")
-    if "3:2 (Perfect Fifth)" in isolated_scale_links:
+if "3:2 (Perfect Fifth)" in isolated_scale_links:
         detected_atoms.append("Diagonal Line")
         
-    if detected_atoms:
+if detected_atoms:
         st.write(f"**Extracted Atomic Components:** {', '.join([f'`{a}`' for a in detected_atoms])}")
         
         match_rows = []

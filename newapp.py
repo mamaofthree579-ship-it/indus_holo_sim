@@ -389,8 +389,8 @@ LEXICON_REGISTRY = [
         # ----------------------------------------------------
     # 5. MOLECULAR LEXICON DECODER TERMINAL
     # ----------------------------------------------------
-    st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
-    st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
+st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
+st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
     
     # 💡 ADD THIS SAFETY FALLBACK LINE HERE:
     if 'current_tags' not in locals() or not current_tags:

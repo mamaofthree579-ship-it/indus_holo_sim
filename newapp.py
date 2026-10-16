@@ -323,7 +323,10 @@ if input_active:
         
         for t in current_tags:
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple  # Isolated horizontal coordinate element safely
+            
+            # 💡 FIXED: Uses automatic tuple unpacking to isolate x_coord without using brackets!
+            x_coord, y_coord = coord_tuple
+            
             raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
             
             if x_coord < 128:
@@ -334,6 +337,7 @@ if input_active:
                 right_angles_sum += raw_ang
                 
         total_nodes = left_side_nodes + right_side_nodes
+
 
         
         if total_nodes > 0:

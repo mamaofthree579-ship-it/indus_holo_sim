@@ -1,111 +1,138 @@
 import streamlit as st
-import urllib.request
 import numpy as np
 import cv2
 import pandas as pd
 from skimage.morphology import skeletonize
-
-# Print directly to your terminal command-line window to see where it stops
-print("\n>>> DEBUG: Streamlit script execution kicked off successfully.")
-
-st.set_page_config(page_title="Indus Script Analyzer", layout="wide")
-st.title("🏛️ Indus Script Geometric Data Tag Analyzer")
-st.text("If you can see this text, the Streamlit frontend layout is rendering correctly.")
+from streamlit_drawable_canvas import st_canvas  # Requires: pip install streamlit-drawable-canvas
 
 # ==========================================
-# HARMONIC MATRIX REFERENCE
+# HARMONIC MATRIX: JUST INTONATION MATRICES
 # ==========================================
 JUST_INTONATION_SCALE = {
-    "1:1 (0° Base)": 0.0,
+    "1:1 (Unison / 0° Base)": 0.0,
+    "16:15 (Minor Second)": 90.0 * np.log2(16/15),   # ~ 8.44°
+    "9:8 (Major Second)": 90.0 * np.log2(9/8),       # ~ 15.29°
+    "6:5 (Minor Third)": 90.0 * np.log2(6/5),         # ~ 24.47°
+    "5:4 (Major Third)": 90.0 * np.log2(5/4),         # ~ 28.97°
     "4:3 (Perfect Fourth)": 90.0 * np.log2(4/3),      # ~ 37.37°
+    "45:32 (Tritone)": 90.0 * np.log2(45/32),        # ~ 44.18°
     "3:2 (Perfect Fifth)": 90.0 * np.log2(3/2),       # ~ 52.65°
-    "2:1 (Octave / 90° Axis)": 90.0
+    "8:5 (Minor Sixth)": 90.0 * np.log2(8/5),         # ~ 61.02°
+    "5:3 (Major Sixth)": 90.0 * np.log2(5/3),         # ~ 66.37°
+    "7:4 (Harmonic Seventh)": 90.0 * np.log2(7/4),    # ~ 72.67°
+    "15:8 (Major Seventh)": 90.0 * np.log2(15/8),     # ~ 81.56°
+    "2:1 (Octave / 90° Axis)": 90.0                   # 90.0°
 }
 
-st.sidebar.header("🎛️ Parameters")
-threshold_val = st.sidebar.slider("Simulated Light Layer", 10, 245, 200)
-tolerance_deg = st.sidebar.slider("Harmonic Tolerance (Degrees)", 0.5, 5.0, 2.0)
+st.set_page_config(page_title="Indus Script Harmonic Analyzer", layout="wide")
+st.title("🏛️ Indus Script Geometric Data Tag Analyzer")
+st.markdown("Testing multi-layer 3D data-encoding theories using mathematical fractional harmonic ratios.")
 
-image_url = "https://wikimedia.org"
+# --- Side Controls ---
+st.sidebar.header("🎛️ Analysis Controls")
+input_method = st.sidebar.radio("Data Input Choice", ["Draw Symbol Freehand", "Upload Image File"])
+tolerance_deg = st.sidebar.slider("Harmonic Alignment Tolerance (Degrees)", 0.5, 5.0, 2.0, step=0.5)
 
-@st.cache_data
-def download_and_flatten_sign(url):
-    print(f">>> DEBUG: Attempting to download network resource: {url}")
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req) as response:
-            arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
-            img = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
-            
-            if img is None:
-                print(">>> DEBUG ERROR: OpenCV failed to decode downloaded image bytes.")
-                return None
-                
-            # If image has an Alpha transparent channel, flatten it manually
-            if img.shape[-1] == 4:
-                alpha = img[:, :, 3] / 255.0
-                bg = np.ones_like(img[:, :, :3], dtype=np.uint8) * 255
-                for c in range(3):
-                    bg[:, :, c] = (alpha * img[:, :, c] + (1.0 - alpha) * 255).astype(np.uint8)
-                return cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY)
-            return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
-    except Exception as e:
-        print(f">>> DEBUG CRASH in download function: {e}")
-        return None
+thresh_img = None
 
-gray_img = download_and_flatten_sign(image_url)
-
-if gray_img is not None:
-    print(f">>> DEBUG: Image loaded cleanly. Array shape matrix dimensions: {gray_img.shape}")
-    gray_img = cv2.resize(gray_img, (256, 256))
+# --- Method A: Draw Interactive Canvas ---
+if input_method == "Draw Symbol Freehand":
+    st.subheader("✏️ Draw an Indus Sign Layer Variant below:")
+    st.caption("Draw structural segments with your mouse. Use sharp adjustments to test if junctions calculate musical ratios.")
     
-    # Process threshold slice
-    _, thresh_img = cv2.threshold(gray_img, threshold_val, 255, cv2.THRESH_BINARY_INV)
-    thresh_img = cv2.convertScaleAbs(thresh_img)
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 255, 255, 0)",
+        stroke_width=6,
+        stroke_color="#FFFFFF",
+        background_color="#000000",
+        height=256,
+        width=256,
+        drawing_mode="freedraw",
+        key="canvas",
+    )
+    
+    if canvas_result.image_data is not None:
+        # Convert the drawing directly into a binary layer matrix
+        rgba_img = canvas_result.image_data
+        thresh_img = cv2.cvtColor(rgba_img, cv2.COLOR_RGBA2GRAY)
 
-    # Skeletonize layout strokes
+# --- Method B: Local File Uploader ---
+else:
+    st.subheader("📁 Upload a Local Script Extraction:")
+    uploaded_file = st.file_uploader("Select PNG or JPG image asset", type=["png", "jpg", "jpeg"])
+    threshold_val = st.sidebar.slider("Simulated Light/Depth Layer (Threshold)", 10, 245, 127)
+    
+    if uploaded_file is not None:
+        file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+        img = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
+        
+        # Flatten any transparency channel blocks safely onto a white background canvas
+        if img is not None and img.shape[-1] == 4:
+            alpha = img[:, :, 3] / 255.0
+            bg = np.ones_like(img[:, :, :3], dtype=np.uint8) * 255
+            for c in range(3):
+                bg[:, :, c] = (alpha * img[:, :, c] + (1.0 - alpha) * 255).astype(np.uint8)
+            gray_img = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY)
+        elif img is not None and len(img.shape) == 3:
+            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray_img = img
+            
+        gray_img = cv2.resize(gray_img, (256, 256))
+        _, thresh_img = cv2.threshold(gray_img, threshold_val, 255, cv2.THRESH_BINARY_INV)
+
+# --- Process Extracted Target Grids ---
+if thresh_img is not None and np.sum(thresh_img) > 0:
+    thresh_img = cv2.convertScaleAbs(thresh_img)
+    
+    # Structural bone path processing
     sk_bool = skeletonize(thresh_img > 0)
     sk = (sk_bool.astype(np.uint8)) * 255
     contours, _ = cv2.findContours(sk, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    print(f">>> DEBUG: Isolated {len(contours)} trace vector path loops from skeleton.")
     
     detected_tags = []
     annotated_display = cv2.cvtColor(thresh_img, cv2.COLOR_GRAY2RGB)
 
     for c in contours:
-        pts = c.reshape(-1, 2)
-        if len(pts) < 3:
+        if len(c) < 3:
             continue
+        pts = c.reshape(-1, 2)
+        
         for i in range(1, len(pts) - 1):
             v1 = pts[i] - pts[i-1]
             v2 = pts[i+1] - pts[i]
-            norm_p = np.linalg.norm(v1) * np.linalg.norm(v2)
-            if norm_p == 0:
+            
+            norm_product = np.linalg.norm(v1) * np.linalg.norm(v2)
+            if norm_product == 0:
                 continue
-            cos_a = np.clip(np.dot(v1, v2) / norm_p, -1.0, 1.0)
-            angle_deg = np.degrees(np.arccos(cos_a))
+                
+            cos_angle = np.clip(np.dot(v1, v2) / norm_product, -1.0, 1.0)
+            angle_deg = np.degrees(np.arccos(cos_angle))
             angle_quadrant = angle_deg % 90
             
-            for name, target in JUST_INTONATION_SCALE.items():
-                if abs(angle_quadrant - target) <= tolerance_deg:
+            for interval_name, target_angle in JUST_INTONATION_SCALE.items():
+                if abs(angle_quadrant - target_angle) <= tolerance_deg:
                     coord = tuple(pts[i].astype(int))
                     detected_tags.append({
-                        "Coordinate": str(coord),
-                        "Measured Angle": f"{round(angle_deg, 1)}°",
-                        "Harmonic Grid Link": name,
+                        "Coordinate Location": str(coord),
+                        "Measured Axis Angle": f"{round(angle_deg, 1)}°",
+                        "Harmonic Grid Link": interval_name,
+                        "Deviation": f"{round(abs(angle_quadrant - target_angle), 2)}°"
                     })
-                    cv2.circle(annotated_display, coord, 4, (255, 0, 0), -1)
+                    cv2.circle(annotated_display, coord, 4, (0, 255, 0), -1) # Green anchor tagging dots
+                    break
 
-    # Layout generation rendering via default fallback calls
-    st.subheader("📷 Image Matrix Visualizations")
-    st.image(thresh_img, caption="Binary Layer Slice", use_container_width=True)
-    st.image(annotated_display, caption="Tagged Intersections", use_container_width=True)
-
-    st.subheader("🎼 Mathematical Harmonic Output Matrix")
-    if detected_tags:
-        df_tags = pd.DataFrame(detected_tags).drop_duplicates(subset=["Harmonic Grid Link"])
-        st.dataframe(df_tags, use_container_width=True)
-    else:
-        st.write("No matching harmonic junctions found at this layer combination.")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("📷 Structural Processing")
+        st.image(annotated_display, caption="Detected Geometric Data Tags (Green Dots)", use_container_width=True)
+    with col2:
+        st.subheader("🎼 Tuning Matrix Alignments")
+        if detected_tags:
+            df_tags = pd.DataFrame(detected_tags).drop_duplicates(subset=["Harmonic Grid Link"])
+            st.dataframe(df_tags, use_container_width=True, hide_index=True)
+            st.success(f"Isolated {len(df_tags)} intersections confirming to geometric data scales.")
+        else:
+            st.info("No junctions fit the tuning scale ratios at this tolerance level. Adjust vectors or drawing lines.")
 else:
-    st.error("Data tracking array returned empty. The application cannot fetch data from the network.")
+    st.warning("Waiting for symbol layout inputs. Draw or upload a script component above.")

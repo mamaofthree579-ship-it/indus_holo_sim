@@ -427,5 +427,5 @@ if detected_atoms:
             st.success("📝 Lexicon cross-checking complete. Sub-surface atomic configurations translated successfully.")
         else:
             st.info("Geometry processed cleanly. Traced primitives represent an unregistered or variant atomic molecule configuration.")
-        else:
+else:
         st.caption("Awaiting drawing vector tracing metrics to map structural lexicon rows.")

@@ -393,7 +393,7 @@ st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
 st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
     
     # 💡 ADD THIS SAFETY FALLBACK LINE HERE:
-    if 'current_tags' not in locals() or not current_tags:
+if 'current_tags' not in locals() or not current_tags:
         current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg) if 'thresh_img' in locals() else ([], None)
     
     # Map calculated harmonic locks back to raw atomic primitives

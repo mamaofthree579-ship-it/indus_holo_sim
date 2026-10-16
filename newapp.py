@@ -386,28 +386,30 @@ LEXICON_REGISTRY = [
         "Min Access": "Level 3 (System Engineer)"
     }
 ]
-        # ----------------------------------------------------
+    # ----------------------------------------------------
     # 5. MOLECULAR LEXICON DECODER TERMINAL
     # ----------------------------------------------------
-st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
-st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
+    st.header("📖 5. Molecular Lexicon & Linguistic Translation Decoder")
+    st.markdown("Cross-referencing isolated geometric atoms against your custom translation database to extract phonetic readings.")
     
-    # 💡 ADD THIS SAFETY FALLBACK LINE HERE:
-if 'current_tags' not in locals() or not current_tags:
+    if 'current_tags' not in locals() or not current_tags:
         current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg) if 'thresh_img' in locals() else ([], None)
     
-    # Map calculated harmonic locks back to raw atomic primitives
-isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
-
+    # 💡 INITIALIZE THE LIST FIRST:
+    detected_atoms = []
     
-if "1:1 (Unison)" in isolated_scale_links:
+    # Map calculated harmonic locks back to raw atomic primitives
+    isolated_scale_links = set([t["Harmonic Grid Link"] for t in current_tags]) if current_tags else set()
+    
+    if "1:1 (Unison)" in isolated_scale_links:
         detected_atoms.append("Vertical Line")
-if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
+    if "2:1 (Octave / 90° Axis)" in isolated_scale_links:
         detected_atoms.append("Horizontal Line")
-if "4:3 (Perfect Fourth)" in isolated_scale_links:
+    if "4:3 (Perfect Fourth)" in isolated_scale_links:
         detected_atoms.append("Angle")
-if "3:2 (Perfect Fifth)" in isolated_scale_links:
+    if "3:2 (Perfect Fifth)" in isolated_scale_links:
         detected_atoms.append("Diagonal Line")
+
         
 if detected_atoms:
         st.write(f"**Extracted Atomic Components:** {', '.join([f'`{a}`' for a in detected_atoms])}")

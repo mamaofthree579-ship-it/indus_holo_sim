@@ -201,7 +201,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     df_pivot = df_p.pivot(index="Harmonic Scale Tier", columns="Layer Depth", values="Status")
     st.dataframe(df_pivot, use_container_width=True)
 
-    # ----------------------------------------------------
+       # ----------------------------------------------------
     # 2. AUDIO CHORD SYNTHESIZER
     # ----------------------------------------------------
     st.header("🎼 2. Acoustic Sonification Chord Node")
@@ -260,7 +260,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             })
         st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
 
-     # ----------------------------------------------------
+    # ----------------------------------------------------
     # 4. ASYMMETRY POINTER & HIERARCHICAL ACCESS INDEX
     # ----------------------------------------------------
     st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
@@ -297,12 +297,22 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
                     delta="Left-Weighted Pointer" if asymmetry_index > 0 else "Right-Weighted Pointer" if asymmetry_index < 0 else "Perfect Balance (Zero Pointer)"
                 )
                 
-                if asymmetry_index > 15.0:
-                    st.info("⬅️ **SYSTEM READING DIRECTION:** Vector weights indicate an intentional **Right-to-Left** operational sweep (Standard Harappan seal format).")
-                elif asymmetry_index < -15.0:
-                    st.info("➡️ **SYSTEM READING DIRECTION:** Vector weights indicate an intentional **Left-to-Right** operational sweep (Standard impression/clay format).")
+                # Dynamic text feedback changes based on whether image is mirrored
+                if view_mode == "Original Seal View (Carved Intaglio)":
+                    if asymmetry_index > 15.0:
+                        st.info("⬅️ **SEAL CARVING AXIS:** Asymmetry vectors confirm a native **Right-to-Left** engraving sweep.")
+                    elif asymmetry_index < -15.0:
+                        st.info("➡️ **SEAL CARVING AXIS:** Asymmetry vectors confirm an inverted **Left-to-Right** engraving sweep.")
+                    else:
+                        st.info("🔄 **SEAL CARVING AXIS:** Static geometric equilibrium.")
                 else:
-                    st.info("🔄 **SYSTEM READING DIRECTION:** Balanced geometry. Indicates a static anchor sign or dual-directional parity check.")
+                    # Clay view logic: flips direction interpretations
+                    if asymmetry_index > 15.0:
+                        st.info("➡️ **CLAY READING FLOW:** Impression inversion projects an effective **Left-to-Right** reading flow.")
+                    elif asymmetry_index < -15.0:
+                        st.info("⬅️ **CLAY READING FLOW:** Impression inversion projects an effective **Right-to-Left** reading flow.")
+                    else:
+                        st.info("🔄 **CLAY READING FLOW:** Static geometric equilibrium.")
                     
             with asym_col2:
                 unique_intervals = len(set([t["Harmonic Grid Link"] for t in current_tags]))
@@ -320,4 +330,5 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
                 {"Matrix Quadrant": "Right Data Sector (≥ 128px Axis)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
             ])
             st.dataframe(df_asym, use_container_width=True, hide_index=True)
-
+else:
+    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")

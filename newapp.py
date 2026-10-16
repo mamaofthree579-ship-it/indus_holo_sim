@@ -6,9 +6,9 @@ from scipy.spatial.distance import cdist
 from skimage.morphology import skeletonize
 from streamlit_drawable_canvas import st_canvas
 
-# ==========================================
-# HARMONIC MATRIX: JUST INTONATION FREQUENCIES
-# ==========================================
+# ========================================================
+# HARMONIC MATRIX: JUST INTONATION CONSTANTS
+# ========================================================
 JUST_INTONATION_SCALE = {
     "1:1 (Unison)": {"angle": 0.0, "freq": 220.0},
     "16:15 (Minor Second)": {"angle": 90.0 * np.log2(16/15), "freq": 234.6},
@@ -25,22 +25,21 @@ JUST_INTONATION_SCALE = {
     "2:1 (Octave / 90° Axis)": {"angle": 90.0, "freq": 440.0}
 }
 
-# --- Known Reference Matrix (Archetypes) ---
+# --- System Validation Template Repositories ---
 ARCHETYPES = {
     "Standard Fish Sign (Guild Identity A)": [0.0, 37.37, 52.65, 90.0],
     "U-Shape Pot Sign (Tax/Value Token)": [0.0, 28.97, 66.37, 90.0],
     "Parallel Line Bar (Commodity Measure)": [0.0, 90.0]
 }
 
+# --- Streamlit Dashboard Initializing ---
 st.set_page_config(page_title="Indus Epigraphic Matrix Engine", layout="wide")
 st.title("🏛️ Indus Epigraphic Multi-Layer Matrix Engine")
-st.markdown("Advanced analytical workstation isolating structural layer tracking, audio sonification, and comparative matrix overlays.")
+st.markdown("Advanced analytical workstation isolating structural layer tracking, audio sonification, and authenticity fingerprints.")
 
-# --- Side Panel Controls ---
 st.sidebar.header("🎛️ Analysis Configurations")
 tolerance_deg = st.sidebar.slider("Harmonic Resonance Tolerance (Deg)", 0.5, 5.0, 2.0, step=0.5)
 
-# --- Drawing Interface ---
 st.subheader("✏️ Draw Layer Geometry Below")
 canvas_result = st_canvas(
     fill_color="rgba(255, 255, 255, 0)",
@@ -55,7 +54,7 @@ canvas_result = st_canvas(
 )
 
 def process_binary_matrix(thresh, tol):
-    """Core mathematical engine isolating angles and linking them to harmonic identities."""
+    """Core geometric filtering engine parsing joint angle configurations."""
     if thresh is None or np.sum(thresh) == 0:
         return [], None
     
@@ -85,35 +84,80 @@ def process_binary_matrix(thresh, tol):
                     cv2.circle(display_img, tuple(pts[i].astype(int)), 5, (0, 255, 255), -1)
                     break
     return tags, display_img
-
-# --- Core Pipeline Execution ---
+# --- Core Pipeline Execution Loop ---
 if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0:
     raw_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
     
     # ----------------------------------------------------
-    # 1. THE LAYER PERSISTENCE TRACKER (Multi-Depth Simulation)
+    # AUTOMATED MATRIX SWEEP & FINGERPRINT SCORE
+    # ----------------------------------------------------
+    st.header("🧬 Automated Authenticity Fingerprint Sweep")
+    st.markdown("Scanning 10 layers simultaneously to compute spatial stability indexes.")
+    
+    sweep_thresholds = np.linspace(30, 230, 10, dtype=int)
+    harmonic_counts = {label: 0 for label in JUST_INTONATION_SCALE.keys()}
+    total_valid_sweeps = 0
+    
+    for t_val in sweep_thresholds:
+        layer_mask = cv2.GaussianBlur(raw_canvas, (3, 3), 0)
+        _, layer_thresh = cv2.threshold(layer_mask, t_val, 255, cv2.THRESH_BINARY)
+        tags, _ = process_binary_matrix(layer_thresh, tolerance_deg)
+        
+        if tags:
+            total_valid_sweeps += 1
+            found_this_sweep = set([t["label"] for t in tags])
+            for label in found_this_sweep:
+                harmonic_counts[label] += 1
+                
+    fingerprint_data = []
+    high_stability_intervals = 0
+    
+    for label, count in harmonic_counts.items():
+        persistence_pct = (count / total_valid_sweeps * 100) if total_valid_sweeps > 0 else 0.0
+        if persistence_pct >= 70.0:
+            high_stability_intervals += 1
+            
+        fingerprint_data.append({
+            "Harmonic Data Tag": label,
+            "Layer Persistence Frequency": f"{count} / {total_valid_sweeps} Layers",
+            "Stability Percentage": persistence_pct
+        })
+        
+    base_score = (high_stability_intervals / 4.0) * 100.0  
+    authenticity_score = min(100.0, max(0.0, base_score))
+    
+    score_col1, score_col2 = st.columns(2)
+    with score_col1:
+        st.metric(
+            label="🔒 Authenticity Fingerprint Score", 
+            value=f"{round(authenticity_score, 1)}%",
+            help="High percentages signal structural design resistance confirming systematic intentional layouts."
+        )
+    with score_col2:
+        if authenticity_score >= 75.0:
+            st.success("🎯 **VERDICT: Cryptographic Token Archetype.** Geometry demonstrates complete resistance to distortion, confirming a structured database blueprint.")
+        elif authenticity_score >= 40.0:
+            st.warning("⚠️ **VERDICT: Indeterminate Layering.** Signs show partial grid distortion typical of secondary hybrid stamping components.")
+        else:
+            st.error("❌ **VERDICT: High Distortion / Freehand Artwork.** Geometric relationships vanish rapidly across physical depth slices.")
+
+    # ----------------------------------------------------
+    # 1. LAYER PERSISTENCE DISPLAY
     # ----------------------------------------------------
     st.header("⏳ 1. Structural Layer Persistence Tracker")
-    st.markdown("Simulating micro-topography shifts by scanning across simulated physical engraving depths.")
-    
-    # Simulate variations across three simulated lighting depths
-    simulated_depths = {"Surface Layer (High Light)": 50, "Median Engraving": 127, "Deep Core Groove": 200}
+    simulated_depths = {"Surface Layer": 50, "Median Engraving": 127, "Deep Core Groove": 200}
     persistence_rows = []
     active_frequencies = []
     
     cols = st.columns(3)
     for idx, (layer_name, simulated_thresh) in enumerate(simulated_depths.items()):
-        # Introduce variation into each layer profile to simulate edge gradients
         layer_mask = cv2.GaussianBlur(raw_canvas, (3, 3), 0)
         _, layer_thresh = cv2.threshold(layer_mask, simulated_thresh, 255, cv2.THRESH_BINARY)
-        
         tags, img_out = process_binary_matrix(layer_thresh, tolerance_deg)
         
         with cols[idx]:
             if img_out is not None:
                 st.image(img_out, caption=layer_name, use_container_width=True)
-            else:
-                st.caption(f"{layer_name} empty")
                 
         found_labels = set([t["label"] for t in tags]) if tags else set()
         for label in JUST_INTONATION_SCALE.keys():
@@ -132,17 +176,13 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     st.dataframe(df_pivot, use_container_width=True)
 
     # ----------------------------------------------------
-    # 2. AUDIO SYNTHESIZER NODE (Sonification Engine)
+    # 2. AUDIO CHORD SYNTHESIZER
     # ----------------------------------------------------
     st.header("🎼 2. Acoustic Sonification Chord Node")
-    st.markdown("Converts the active geometric grid lines into a real-time audio tone matrix.")
-    
     if active_frequencies:
-        # Sort and take the top unique frequencies to keep the chord clear
         chord_freqs = sorted(list(set(active_frequencies)))[:4]
-        st.write(f"**Calculated Geometric Acoustic Pitch Vectors:** {', '.join([f'{f}Hz' for f in chord_freqs])}")
+        st.write(f"**Acoustic Vector Footprint Matrix:** {', '.join([f'{f}Hz' for f in chord_freqs])}")
         
-        # Inject an inline Web Audio synthesizer engine script
         oscillator_code = "".join([f"""
             let osc{i} = audioCtx.createOscillator();
             let gain{i} = audioCtx.createGain();
@@ -170,39 +210,28 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             </script>
         """
         st.components.v1.html(audio_trigger_script, height=60)
-    else:
-        st.info("Draw intersecting angles on the canvas above to build an acoustic chord matrix.")
 
     # ----------------------------------------------------
-    # 3. MATRIX COMPARE TOOL (System Validation)
+    # 3. OVERLAY COMPARATOR INDEX
     # ----------------------------------------------------
     st.header("⚖️ 3. Macro Matrix Archetype Comparison")
-    st.markdown("Evaluates whether your drawn shape signature aligns with known administrative seal templates.")
-    
-    # Process current drawing data into an angular signature list
     current_tags, _ = process_binary_matrix(raw_canvas, tolerance_deg)
     current_angles = sorted(list(set([t["angle"] for t in current_tags]))) if current_tags else []
     
     if current_angles:
         comparison_results = []
         for arch_name, arch_angles in ARCHETYPES.items():
-            # Calculate the structural distance matrix between coordinate groups
             arr_drawn = np.array(current_angles).reshape(-1, 1)
             arr_arch = np.array(arch_angles).reshape(-1, 1)
             dist_matrix = cdist(arr_drawn, arr_arch, metric='euclidean')
             structural_deviation = np.mean(np.min(dist_matrix, axis=1))
             
-            # Translate deviation error into a percentage match
             match_confidence = max(0.0, 100.0 - (structural_deviation * 2.5))
             comparison_results.append({
                 "System Archetype Registry": arch_name,
                 "Structural Deviation Index": round(structural_deviation, 3),
                 "Matrix Match Confidence": f"{round(match_confidence, 1)}%"
             })
-            
-        df_comp = pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index")
-        st.dataframe(df_comp, use_container_width=True, hide_index=True)
-    else:
-        st.caption("Awaiting distinct angular intersections to run database cross-checking loops.")
+        st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
 else:
-    st.info("🖋️ Awaiting vector inputs. Use your mouse to draw a symbol on the canvas above to initialize the three analytical frameworks.")
+    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")

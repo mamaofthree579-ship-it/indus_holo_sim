@@ -80,16 +80,24 @@ def process_binary_matrix(thresh, tol):
             
             for label, data in JUST_INTONATION_SCALE.items():
                 if abs(angle_quad - data["angle"]) <= tol:
-                    tags.append({"label": label, "angle": angle_quad, "freq": data["freq"]})
+                    tags.append({
+                        "Coordinate Location": str(tuple(pts[i].astype(int))), 
+                        "Measured Axis Angle": f"{round(angle_quad, 1)}°", 
+                        "Harmonic Grid Link": label, 
+                        "angle": angle_quad, 
+                        "freq": data["freq"]
+                    })
                     cv2.circle(display_img, tuple(pts[i].astype(int)), 5, (0, 255, 255), -1)
                     break
     return tags, display_img
 # --- Core Pipeline Execution Loop ---
 if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0:
+    # Safely convert the drawing into a grayscale canvas right away
     raw_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+    _, thresh_img = cv2.threshold(raw_canvas, 127, 255, cv2.THRESH_BINARY)
     
     # ----------------------------------------------------
-    # AUTOMATED MATRIX SWEEP & FINGERPRINT SCORE
+    # AUTOMATED FINGERPRINT MATRIX SWEEP
     # ----------------------------------------------------
     st.header("🧬 Automated Authenticity Fingerprint Sweep")
     st.markdown("Scanning 10 layers simultaneously to compute spatial stability indexes.")
@@ -105,7 +113,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         
         if tags:
             total_valid_sweeps += 1
-            found_this_sweep = set([t["label"] for t in tags])
+            found_this_sweep = set([t["Harmonic Grid Link"] for t in tags])
             for label in found_this_sweep:
                 harmonic_counts[label] += 1
                 
@@ -135,9 +143,9 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         )
     with score_col2:
         if authenticity_score >= 75.0:
-            st.success("🎯 **VERDICT: Cryptographic Token Archetype.** Geometry demonstrates complete resistance to distortion, confirming a structured database blueprint.")
+            st.success("🎯 **VERDICT: Cryptographic Token Archetype.** Geometry demonstrates complete resistance to distortion, confirming a structured blueprint.")
         elif authenticity_score >= 40.0:
-            st.warning("⚠️ **VERDICT: Indeterminate Layering.** Signs show partial grid distortion typical of secondary hybrid stamping components.")
+            st.warning("⚠️ **VERDICT: Indeterminate Layering.** Signs show partial grid distortion typical of secondary hybrid components.")
         else:
             st.error("❌ **VERDICT: High Distortion / Freehand Artwork.** Geometric relationships vanish rapidly across physical depth slices.")
 
@@ -159,7 +167,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
             if img_out is not None:
                 st.image(img_out, caption=layer_name, use_container_width=True)
                 
-        found_labels = set([t["label"] for t in tags]) if tags else set()
+        found_labels = set([t["Harmonic Grid Link"] for t in tags]) if tags else set()
         for label in JUST_INTONATION_SCALE.keys():
             persistence_rows.append({
                 "Harmonic Scale Tier": label,
@@ -174,7 +182,6 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     df_p = pd.DataFrame(persistence_rows)
     df_pivot = df_p.pivot(index="Harmonic Scale Tier", columns="Layer Depth", values="Status")
     st.dataframe(df_pivot, use_container_width=True)
-
     # ----------------------------------------------------
     # 2. AUDIO CHORD SYNTHESIZER
     # ----------------------------------------------------
@@ -215,7 +222,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     # 3. OVERLAY COMPARATOR INDEX
     # ----------------------------------------------------
     st.header("⚖️ 3. Macro Matrix Archetype Comparison")
-    current_tags, _ = process_binary_matrix(raw_canvas, tolerance_deg)
+    current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg)
     current_angles = sorted(list(set([t["angle"] for t in current_tags]))) if current_tags else []
     
     if current_angles:
@@ -233,16 +240,12 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
                 "Matrix Match Confidence": f"{round(match_confidence, 1)}%"
             })
         st.dataframe(pd.DataFrame(comparison_results).sort_values(by="Structural Deviation Index"), use_container_width=True, hide_index=True)
-else:
-    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")
+
     # ----------------------------------------------------
     # 4. ASYMMETRY POINTER & HIERARCHICAL ACCESS INDEX
     # ----------------------------------------------------
     st.header("⚖️ 4. Asymmetrical Vector Weight & Hierarchical Access Index")
     st.markdown("Analyzing spatial imbalance vectors to isolate reading direction pointers and hidden 'System Engineer' data channels.")
-    
-        # Change 'raw_canvas' to 'thresh_img' on this line:
-    current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg)
     
     if current_tags:
         left_side_nodes = 0
@@ -251,12 +254,8 @@ else:
         right_angles_sum = 0.0
         
         for t in current_tags:
-            # Change 'raw_canvas' to 'thresh_img' on this line too:
-            current_tags, _ = process_binary_matrix(thresh_img, tolerance_deg)
-
             coord_tuple = eval(t["Coordinate Location"])
-            x_coord = coord_tuple[0]
-            # Strip degree symbol from angle string before casting to float
+            x_coord = coord_tuple
             raw_ang = float(t["Measured Axis Angle"].replace("°", ""))
             
             if x_coord < 128:
@@ -269,7 +268,6 @@ else:
         total_nodes = left_side_nodes + right_side_nodes
         
         if total_nodes > 0:
-            # Calculate the Asymmetry Imbalance Percentage
             asymmetry_index = ((left_side_nodes - right_side_nodes) / total_nodes) * 100.0
             
             asym_col1, asym_col2 = st.columns(2)
@@ -280,7 +278,6 @@ else:
                     delta="Left-Weighted Pointer" if asymmetry_index > 0 else "Right-Weighted Pointer" if asymmetry_index < 0 else "Perfect Balance (Zero Pointer)"
                 )
                 
-                # Determine Reading Direction based on geometric weight bias
                 if asymmetry_index > 15.0:
                     st.info("⬅️ **SYSTEM READING DIRECTION:** Vector weights indicate an intentional **Right-to-Left** operational sweep (Standard Harappan seal format).")
                 elif asymmetry_index < -15.0:
@@ -289,8 +286,6 @@ else:
                     st.info("🔄 **SYSTEM READING DIRECTION:** Balanced geometry. Indicates a static anchor sign or dual-directional parity check.")
                     
             with asym_col2:
-                # Calculate the Access Tier Level based on geometric complexity
-                # System engineers would plant intricate, multi-angled nodes
                 unique_intervals = len(set([t["Harmonic Grid Link"] for t in current_tags]))
                 
                 if unique_intervals >= 4 and abs(asymmetry_index) > 10:
@@ -300,15 +295,11 @@ else:
                 else:
                     st.error("🛒 **DATA ACCESS LEVEL: LEVEL 1 (PUBLIC MARKET)**  \nSurface level semantic token. Direct visual logograph representing standard commodity categorization.")
                     
-            # Render a mini-matrix breakdown table for the system engineer view
             st.markdown("### 🛠️ Sub-Surface Geometric Weight Distribution")
             df_asym = pd.DataFrame([
                 {"Matrix Quadrant": "Left Data Sector (< 128px Axis)", "Active Nodes": left_side_nodes, "Cumulative Angular Energy": f"{round(left_angles_sum, 1)}°"},
                 {"Matrix Quadrant": "Right Data Sector (≥ 128px Axis)", "Active Nodes": right_side_nodes, "Cumulative Angular Energy": f"{round(right_angles_sum, 1)}°"}
             ])
             st.dataframe(df_asym, use_container_width=True, hide_index=True)
-            
-        else:
-            st.caption("Awaiting distinct intersection configurations to measure spatial balancing vectors.")
-    else:
-        st.caption("Draw structural segments with directional imbalance to compute hierarchical asymmetry indexes.")
+else:
+    st.info("🖋️ Awaiting vector inputs. Draw an inscription loop above to trigger the 10-layer verification sweep sequence.")

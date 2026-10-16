@@ -426,3 +426,52 @@ if input_active:
             st.success("📝 Lexicon cross-checking complete.")
 else:
     st.info("🖋️ Awaiting vector inputs. Select an options filter to initialize.")
+
+    # ----------------------------------------------------
+    # 6. GEOGRAPHIC GUILD MATRIX & NETWORK PREDICTOR
+    # ----------------------------------------------------
+    st.header("🌐 6. Geographic Guild Matrix & Network Node Predictor")
+    st.markdown("Leveraging nodal logistics and gravity modeling to predict the coordinates of hidden archaeological sites.")
+    
+    # Establish a reference registry of known regional guild centers
+    KNOWN_GUILD_HUBS = [
+        {"Site Hub": "Mohenjo-daro (Central Treasury)", "Lat/Lon": (27.32, 68.13), "Dominant Guild": "Chief Standard (Sovereign)"},
+        {"Site Hub": "Harappa (Distribution Depot)", "Lat/Lon": (30.63, 72.87), "Dominant Guild": "Granary Token (Agricultural)"},
+        {"Site Hub": "Lothal (Maritime Port)", "Lat/Lon": (22.52, 72.25), "Dominant Guild": "Fish Sign (Maritime / Copper)"}
+    ]
+    
+    st.subheader("📋 Registered Network Hubs")
+    st.dataframe(pd.DataFrame(KNOWN_GUILD_HUBS), use_container_width=True, hide_index=True)
+    
+    st.markdown("### 🎯 Predict Next Network Checkpoint Node")
+    st.caption("Select two active trading hubs to calculate where the intermediate administrative security checkpoint should be located.")
+    
+    hub_names = [hub["Site Hub"] for hub in KNOWN_GUILD_HUBS]
+    col_h1, col_h2 = st.columns(2)
+    
+    with col_h1:
+        hub_a = st.selectbox("Select Trading Node Origin (Hub A):", hub_names, index=0)
+    with col_h2:
+        hub_b = st.selectbox("Select Trading Node Destination (Hub B):", hub_names, index=1)
+        
+    if hub_a != hub_b:
+        # Retrieve coordinates for selected hubs
+        coord_a = next(h["Lat/Lon"] for h in KNOWN_GUILD_HUBS if h["Site Hub"] == hub_a)
+        coord_b = next(h["Lat/Lon"] for h in KNOWN_GUILD_HUBS if h["Site Hub"] == hub_b)
+        
+        # Calculate the mathematical midpoint (The optimal logistical resting/verification node)
+        pred_lat = (coord_a[0] + coord_b[0]) / 2.0
+        pred_lon = (coord_a[1] + coord_b[1]) / 2.0
+        
+        st.success(f"📌 **PREDICTED HIGH-CLEARANCE CHECKPOINT NODE LOCATION:** Target Lat: `{round(pred_lat, 4)}`, Lon: `{round(pred_lon, 4)}`")
+        st.info("💡 **Archaeological Directive:** Search satellite imagery or magnetometry datasets within a 15km radius of these coordinates. Look specifically for square mud-brick ramparts matching standard Harappan administrative fortresses.")
+        
+        # Create a display data matrix for mapping visualization
+        map_data = pd.DataFrame([
+            {"lat": coord_a[0], "lon": coord_a[1], "name": f"Hub A: {hub_a}"},
+            {"lat": coord_b[0], "lon": coord_b[1], "name": f"Hub B: {hub_b}"},
+            {"lat": pred_lat, "lon": pred_lon, "name": "🎯 TARGET PREDICTION ZONE"}
+        ])
+        st.map(map_data, use_container_width=True)
+    else:
+        st.warning("Please choose two distinct regional hubs to compute network logistics trajectories.")

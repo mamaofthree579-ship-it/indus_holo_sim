@@ -40,7 +40,7 @@ if input_method == "Draw Symbol Freehand":
     st.subheader("✏️ Draw an Indus Sign Layer Variant below:")
     st.caption("Draw structural segments with your mouse. Use sharp adjustments to test if junctions calculate musical ratios.")
     
-        canvas_result = st_canvas(
+    canvas_result = st_canvas(
         fill_color="rgba(255, 255, 255, 0)",
         stroke_width=6,
         stroke_color="#FFFFFF",

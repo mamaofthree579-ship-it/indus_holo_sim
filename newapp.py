@@ -93,7 +93,25 @@ def process_binary_matrix(thresh, tol):
 # --- Core Pipeline Execution Loop ---
 if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0:
     # Safely convert the drawing into a grayscale canvas right away
-    raw_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+    user_canvas = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+    
+    # ----------------------------------------------------
+    # NEW: CLAY IMPRESSION SIMULATION ENGINE
+    # ----------------------------------------------------
+    st.sidebar.markdown("---")
+    st.sidebar.header("🏺 Matrix View Mode")
+    view_mode = st.sidebar.radio(
+        "Select Physical Projection:",
+        ["Original Seal View (Carved Intaglio)", "Clay Impression View (Stamped Relief)"]
+    )
+    
+    # If Clay mode is active, horizontally mirror the coordinate matrix (Axis 1)
+    if view_mode == "Clay Impression View (Stamped Relief)":
+        raw_canvas = cv2.flip(user_canvas, 1)
+        st.sidebar.success("🔄 Horizontal Mirror Active: Simulating Clay Compression.")
+    else:
+        raw_canvas = user_canvas
+
     _, thresh_img = cv2.threshold(raw_canvas, 127, 255, cv2.THRESH_BINARY)
     
     # ----------------------------------------------------
@@ -165,7 +183,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
         
         with cols[idx]:
             if img_out is not None:
-                st.image(img_out, caption=layer_name, use_container_width=True)
+                st.image(img_out, caption=f"{layer_name} ({view_mode})", use_container_width=True)
                 
         found_labels = set([t["Harmonic Grid Link"] for t in tags]) if tags else set()
         for label in JUST_INTONATION_SCALE.keys():
@@ -182,6 +200,7 @@ if canvas_result.image_data is not None and np.sum(canvas_result.image_data) > 0
     df_p = pd.DataFrame(persistence_rows)
     df_pivot = df_p.pivot(index="Harmonic Scale Tier", columns="Layer Depth", values="Status")
     st.dataframe(df_pivot, use_container_width=True)
+
     # ----------------------------------------------------
     # 2. AUDIO CHORD SYNTHESIZER
     # ----------------------------------------------------
